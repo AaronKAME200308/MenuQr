@@ -1,314 +1,108 @@
 /**
- * ItemModal.tsx — REFONTE DARK LUXE
- * ──────────────────────────────────
- * • Image pleine largeur en hero (parallax léger au scroll)
- * • Header gradient sombre sur l'image + titre en bas
- * • Ingrédients : pills stylées avec icônes
- * • Description élégante centrée
- * • Variantes améliorées
- * • Fermeture : overlay, bouton ✕, Escape
- *
- * Dépendances : framer-motion, lucide-react
+ * ItemModal.tsx — v4
+ * ──────────────────
+ * Fix image : translateX("-50%") corrigé + animation supprimée
  */
 
-import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { X, Leaf, Flame,  ChefHat } from "lucide-react";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Leaf, Flame } from "lucide-react";
 import { fmt } from "./ItemCard";
 import type { MenuItem, Colors } from "./types";
 
-// ─────────────────────────────────────────────────────────────
-// Constantes
-// ─────────────────────────────────────────────────────────────
+const IMG_D    = 200;
+const OVERHANG = 70;
 
-const HERO_H = 300;
+// ─── Image circulaire statique ─────────────────────────────
 
-// ─────────────────────────────────────────────────────────────
-// Section Hero image
-// ─────────────────────────────────────────────────────────────
-
-function HeroImage({
-  src,
-  alt,
-  colors,
-  scrollRef,
-}: {
-  src?: string;
-  alt: string;
-  colors: Colors;
-  scrollRef: React.RefObject<HTMLDivElement>;
-}) {
-  const { scrollY } = useScroll({ container: scrollRef });
-  const imgY = useTransform(scrollY, [0, HERO_H], [0, 40]);
-
+function DishImage({ src, alt }: { src?: string; alt: string }) {
   return (
     <div
       style={{
-        position: "relative",
-        width: "100%",
-        height: HERO_H,
-        flexShrink: 0,
+        position: "absolute",
+        bottom: -OVERHANG,
+        left: "50%",
+        transform: "translateX(-50%)", // ← CSS standard, pas une prop Framer
+        width: IMG_D,
+        height: IMG_D,
+        borderRadius: "50%",
         overflow: "hidden",
-        background: colors.accent,
+        boxShadow:
+          "0 20px 60px rgba(0,0,0,0.28), 0 0 0 6px rgba(255,255,255,0.18), 0 0 0 12px rgba(255,255,255,0.07)",
+        zIndex: 10,
+        background: "#e8e8e8",
       }}
     >
-      {/* Image avec effet parallax */}
       {src ? (
-        <motion.img
+        <img
           src={src}
           alt={alt}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "115%",
-            objectFit: "cover",
-            y: imgY,
-          }}
-          initial={{ scale: 1.08, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         />
       ) : (
         <div
           style={{
-            position: "absolute",
-            inset: 0,
+            width: "100%",
+            height: "100%",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 90,
-            background: `linear-gradient(135deg, ${colors.accent}80, ${colors.bg}aa)`,
+            fontSize: 64,
           }}
         >
           🍽️
         </div>
       )}
-
-      {/* Gradient sombre en bas pour lisibilité du titre */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `linear-gradient(
-            to bottom,
-            rgba(0,0,0,0.08) 0%,
-            rgba(0,0,0,0.15) 40%,
-            rgba(0,0,0,0.72) 80%,
-            rgba(0,0,0,0.88) 100%
-          )`,
-        }}
-      />
-
-      {/* Titre + badges dans le hero */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: "20px 24px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-        }}
-      >
-        {/* Badges diète */}
-        <div style={{ display: "flex", gap: 6 }}>
-          {/* Rating si présent */}
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "3px 8px",
-              borderRadius: 20,
-              background: "rgba(255,255,255,0.12)",
-              backdropFilter: "blur(8px)",
-              border: "1px solid rgba(255,255,255,0.18)",
-              fontSize: 10,
-              color: "#fff",
-              fontFamily: "sans-serif",
-              fontWeight: 600,
-            }}
-          >
-            <ChefHat size={10} color="rgba(255,255,255,0.8)" />
-            Chef's choice
-          </span>
-        </div>
-
-        <motion.h2
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            fontSize: "clamp(22px, 6vw, 30px)",
-            fontWeight: 900,
-            color: "#fff",
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-            textShadow: "0 2px 20px rgba(0,0,0,0.5)",
-            margin: 0,
-          }}
-        >
-          {alt}
-        </motion.h2>
-
-        {/* Calories · poids */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          style={{ display: "flex", gap: 10, alignItems: "center" }}
-        >
-          <DietBadgeHero />
-        </motion.div>
-      </div>
     </div>
   );
 }
 
-function DietBadgeHero() {
-  // Placeholder, les vraies données viennent via item dans ItemModal
-  return null;
-}
+// ─── Pastille ingrédient ───────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────
-// Ingrédient pill — style dark luxe
-// ─────────────────────────────────────────────────────────────
-
-function IngredientPill({
-  name,
-  icon,
-  colors,
-  index,
-}: {
-  name: string;
-  icon?: string;
-  colors: Colors;
-  index: number;
-}) {
+function IngPill({ icon, name, index }: { icon?: string; name: string; index: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.75, y: 10 }}
+      initial={{ opacity: 0, scale: 0.7, y: 8 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{
-        delay: 0.18 + index * 0.055,
-        duration: 0.4,
-        ease: [0.34, 1.4, 0.64, 1],
-      }}
+      transition={{ delay: 0.3 + index * 0.055, duration: 0.38, ease: [0.34, 1.4, 0.64, 1] }}
+      title={name}
       style={{
+        flexShrink: 0,
+        width: 54,
+        height: 54,
+        borderRadius: 18,
+        background: "#f2f2f2",
         display: "flex",
         alignItems: "center",
-        gap: 8,
-        padding: "7px 14px 7px 8px",
-        borderRadius: 40,
-        background: `linear-gradient(135deg, ${colors.accent}22, ${colors.accent}08)`,
-        border: `1px solid ${colors.accent}30`,
-        backdropFilter: "blur(8px)",
-        whiteSpace: "nowrap",
+        justifyContent: "center",
+        fontSize: 27,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
+        cursor: "default",
       }}
     >
-      <div
-        style={{
-          width: 30,
-          height: 30,
-          borderRadius: "50%",
-          background: `${colors.accent}35`,
-          border: `1.5px solid ${colors.accent}50`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 15,
-          flexShrink: 0,
-        }}
-      >
-        {icon ?? "🌿"}
-      </div>
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          color: `${colors.primary}80`,
-          fontFamily: "sans-serif",
-          letterSpacing: "0.02em",
-        }}
-      >
-        {name}
-      </span>
+      {icon ?? "🌿"}
     </motion.div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Section label
-// ─────────────────────────────────────────────────────────────
+// ─── Composant principal ────────────────────────────────────
 
-function SectionLabel({ children, colors }: { children: React.ReactNode; colors: Colors }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-      <div
-        style={{
-          width: 3,
-          height: 18,
-          borderRadius: 2,
-          background: `linear-gradient(to bottom, ${colors.accent}, ${colors.accent}55)`,
-        }}
-      />
-      <p
-        style={{
-          fontSize: 11,
-          fontWeight: 800,
-          color: colors.primary,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          fontFamily: "sans-serif",
-          margin: 0,
-        }}
-      >
-        {children}
-      </p>
-    </div>
-  );
-}
+type Props = { item: MenuItem | null; colors: Colors; onClose: () => void };
 
-// ─────────────────────────────────────────────────────────────
-// ItemModal
-// ─────────────────────────────────────────────────────────────
-
-type ItemModalProps = {
-  item: MenuItem | null;
-  colors: Colors;
-  onClose: () => void;
-};
-
-export default function ItemModal({ item, colors, onClose }: ItemModalProps) {
+export default function ItemModal({ item, colors, onClose }: Props) {
   const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setSelectedVariant(null);
-    // Reset scroll quand l'item change
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [item?.id]);
-
-  // Escape
   useEffect(() => {
     if (!item) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, [item, onClose]);
 
-  // Lock scroll
   useEffect(() => {
     if (!item) return;
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [item]);
 
   const displayPrice =
@@ -320,11 +114,15 @@ export default function ItemModal({ item, colors, onClose }: ItemModalProps) {
       ? item.variants[selectedVariant].currency
       : item?.currency ?? "EUR";
 
+  const accent = colors.accent;
+  const dark   = "#1c1c1c";
+  const muted  = "#888";
+
   return (
     <AnimatePresence>
       {item && (
         <motion.div
-          key="modal-overlay"
+          key="overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -337,19 +135,18 @@ export default function ItemModal({ item, colors, onClose }: ItemModalProps) {
             display: "flex",
             alignItems: "flex-end",
             justifyContent: "center",
-            background: "rgba(0,0,0,0.80)",
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            padding: "0",
+            background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
           }}
         >
-          {/* ── Panneau modal ── */}
+          {/* ── Bottom sheet ── */}
           <motion.div
-            key="modal-panel"
-            initial={{ opacity: 0, y: "100%" }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: "60%" }}
-            transition={{ type: "spring", stiffness: 320, damping: 32, mass: 1 }}
+            key="sheet"
+            initial={{ y: "100%", opacity: 0.6 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
             style={{
               position: "relative",
@@ -357,264 +154,170 @@ export default function ItemModal({ item, colors, onClose }: ItemModalProps) {
               maxWidth: 480,
               maxHeight: "92vh",
               borderRadius: "28px 28px 0 0",
-              overflow: "hidden",
-              background: colors.card,
+              background: "#fff",
               display: "flex",
               flexDirection: "column",
-              boxShadow: "0 -20px 80px rgba(0,0,0,0.7)",
+              overflow: "visible", // permet à l'image de dépasser du header
             }}
           >
-            {/* Handle bar */}
+            {/* ══ HEADER VERT ══ */}
             <div
               style={{
-                position: "absolute",
-                top: 10,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: 40,
-                height: 4,
-                borderRadius: 2,
-                background: "rgba(255,255,255,0.22)",
-                zIndex: 20,
-              }}
-            />
-
-            {/* Hero image */}
-            <HeroImage
-              src={item.image_url}
-              alt={item.name}
-              colors={colors}
-              scrollRef={scrollRef as React.RefObject<HTMLDivElement>}
-            />
-
-            {/* ══ CORPS SCROLLABLE ══ */}
-            <div
-              ref={scrollRef}
-              style={{
-                overflowY: "auto",
-                flex: 1,
-                scrollbarWidth: "none",
+                position: "relative",
+                width: "100%",
+                minHeight: 220,
+                paddingBottom: OVERHANG + 16,
+                background: `linear-gradient(160deg, ${accent} 0%, ${accent}ee 100%)`,
+                borderRadius: "28px 28px 52% 52% / 28px 28px 90px 90px",
+                flexShrink: 0,
                 display: "flex",
                 flexDirection: "column",
+                alignItems: "center",
+                paddingTop: 40,
+                overflow: "visible", // ← indispensable pour que l'image déborde
+                zIndex: 1,
               }}
             >
-              {/* Bande prix + badges */}
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.4 }}
+              {/* Texture dans un sous-div clippé */}
+              <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "20px 24px 0",
-                  gap: 12,
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: "inherit",
+                  overflow: "hidden",
+                  pointerEvents: "none",
                 }}
               >
-                <p
-                  style={{
-                    fontSize: 34,
-                    fontWeight: 900,
-                    color: "#f5d98b",
-                    letterSpacing: "-0.04em",
-                    textShadow: "0 0 32px rgba(245,217,139,0.3)",
-                    margin: 0,
-                    lineHeight: 1,
-                  }}
-                >
-                  {fmt(displayPrice, displayCurrency)}
-                </p>
+                <svg aria-hidden="true" style={{ width: "100%", height: "100%", opacity: 0.09 }}>
+                  <defs>
+                    <pattern id="lv2" x="0" y="0" width="70" height="70" patternUnits="userSpaceOnUse">
+                      <path d="M8,35 Q20,5 32,35 Q20,65 8,35Z" fill="none" stroke="white" strokeWidth="1.4" />
+                      <line x1="8" y1="35" x2="32" y2="35" stroke="white" strokeWidth="0.7" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#lv2)" />
+                </svg>
+              </div>
 
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              {/* Décos */}
+              <span style={{ position: "absolute", top: 40, left: 28, fontSize: 30, zIndex: 2, pointerEvents: "none", transform: "rotate(-25deg)" }}>🥕</span>
+              <span style={{ position: "absolute", bottom: OVERHANG + 36, right: 26, fontSize: 20, zIndex: 2, pointerEvents: "none", opacity: 0.65, transform: "rotate(18deg)" }}>🌿</span>
+
+              {/* Titre */}
+              <h2
+                style={{
+                  fontSize: "clamp(22px, 6vw, 28px)",
+                  fontWeight: 900,
+                  color: "#fff",
+                  letterSpacing: "-0.02em",
+                  textAlign: "center",
+                  padding: "0 64px",
+                  zIndex: 2,
+                  lineHeight: 1.15,
+                  margin: 0,
+                }}
+              >
+                {item.name}
+              </h2>
+
+              {/* Badges diète */}
+              {(item.is_vegetarian || item.is_spicy) && (
+                <div style={{ display: "flex", gap: 6, marginTop: 8, zIndex: 2 }}>
                   {item.is_vegetarian && (
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 4,
-                        padding: "5px 10px",
-                        borderRadius: 20,
-                        background: "rgba(80,200,120,0.15)",
-                        border: "1px solid rgba(80,200,120,0.35)",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: "#50c878",
-                        fontFamily: "sans-serif",
-                      }}
-                    >
-                      <Leaf size={11} />
-                      Végétarien
+                    <span style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Leaf size={12} color="#fff" />
                     </span>
                   )}
                   {item.is_spicy && (
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 4,
-                        padding: "5px 10px",
-                        borderRadius: 20,
-                        background: "rgba(255,69,0,0.15)",
-                        border: "1px solid rgba(255,69,0,0.35)",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: "#ff4500",
-                        fontFamily: "sans-serif",
-                      }}
-                    >
-                      <Flame size={11} />
-                      Épicé
-                    </span>
-                  )}
-                  {(item.calories || item.weight) && (
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 4,
-                        padding: "5px 10px",
-                        borderRadius: 20,
-                        background: `${colors.accent}15`,
-                        border: `1px solid ${colors.accent}30`,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: `${colors.primary}70`,
-                        fontFamily: "sans-serif",
-                      }}
-                    >
-                      {[item.calories ? `${item.calories} kcal` : null, item.weight]
-                        .filter(Boolean)
-                        .join(" · ")}
+                    <span style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(255,80,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Flame size={12} color="#fff" />
                     </span>
                   )}
                 </div>
-              </motion.div>
+              )}
 
-              {/* Padding + sections */}
-              <div
-                style={{
-                  padding: "20px 24px 40px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 24,
-                }}
-              >
-                {/* Description */}
-                {item.description && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <p
-                      style={{
-                        fontSize: 13,
-                        lineHeight: 1.9,
-                        color: `${colors.primary}60`,
-                        fontFamily: "sans-serif",
-                        margin: 0,
-                        borderLeft: `2px solid ${colors.accent}40`,
-                        paddingLeft: 14,
-                        fontStyle: "italic",
-                      }}
-                    >
-                      {item.description}
-                    </p>
-                  </motion.div>
-                )}
-
-                {/* Séparateur */}
-                <div
-                  style={{
-                    height: 1,
-                    background: `linear-gradient(to right, ${colors.accent}30, transparent)`,
-                  }}
-                />
-
-                {/* Ingrédients */}
-                {item.ingredients && item.ingredients.length > 0 && (
-                  <div>
-                    <SectionLabel colors={colors}>Ingrédients</SectionLabel>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 8,
-                      }}
-                    >
-                      {item.ingredients.map((ing, i) => (
-                        <IngredientPill
-                          key={i}
-                          name={ing.name}
-                          icon={ing.icon}
-                          colors={colors}
-                          index={i}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Variantes */}
-                {item.variants && item.variants.length > 0 && (
-                  <div>
-                    <SectionLabel colors={colors}>Taille / Variante</SectionLabel>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {item.variants.map((v, i) => {
-                        const isSelected = selectedVariant === i;
-                        return (
-                          <motion.button
-                            key={i}
-                            whileHover={{ scale: 1.04 }}
-                            whileTap={{ scale: 0.96 }}
-                            onClick={() => setSelectedVariant(isSelected ? null : i)}
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              padding: "10px 20px",
-                              borderRadius: 14,
-                              border: `1.5px solid ${
-                                isSelected ? colors.accent : `${colors.primary}18`
-                              }`,
-                              background: isSelected
-                                ? `${colors.accent}20`
-                                : "rgba(255,255,255,0.03)",
-                              cursor: "pointer",
-                              minWidth: 80,
-                              transition: "all 0.18s ease",
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontSize: 12,
-                                fontWeight: 800,
-                                color: isSelected ? colors.accent : colors.primary,
-                                letterSpacing: "0.02em",
-                              }}
-                            >
-                              {v.label}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: 11,
-                                marginTop: 3,
-                                color: `${colors.primary}50`,
-                                fontFamily: "sans-serif",
-                              }}
-                            >
-                              {fmt(v.price, v.currency)}
-                            </span>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Image — aucune animation, juste du CSS */}
+              <DishImage src={item.image_url} alt={item.name} />
             </div>
 
-            {/* ── Bouton fermer ── */}
+            {/* ══ SECTION BASSE ══ */}
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                overflowX: "hidden",
+                scrollbarWidth: "none",
+                display: "flex",
+                flexDirection: "column",
+                gap: 22,
+                padding: `${OVERHANG + 24}px 24px 100px`,
+                background: "#fff",
+              }}
+            >
+              {/* Prix */}
+              <p style={{ fontSize: 28, fontWeight: 900, color: dark, letterSpacing: "-0.03em", margin: 0 }}>
+                {fmt(displayPrice, displayCurrency)}
+              </p>
+
+              {/* Variantes */}
+              {item.variants && item.variants.length > 0 && (
+                <div>
+                  <p style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: muted, fontFamily: "sans-serif", marginBottom: 10 }}>
+                    Taille
+                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {item.variants.map((v, i) => {
+                      const sel = selectedVariant === i;
+                      return (
+                        <motion.button
+                          key={i}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setSelectedVariant(sel ? null : i)}
+                          style={{
+                            padding: "8px 16px",
+                            borderRadius: 12,
+                            border: `1.5px solid ${sel ? accent : "#e8e8e8"}`,
+                            background: sel ? `${accent}15` : "#fafafa",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <span style={{ fontSize: 12, fontWeight: 700, color: sel ? accent : dark }}>{v.label}</span>
+                          <span style={{ fontSize: 11, marginLeft: 6, color: muted }}>{fmt(v.price, v.currency)}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Ingrédients */}
+              {item.ingredients && item.ingredients.length > 0 && (
+                <div>
+                  <p style={{ fontSize: 17, fontWeight: 800, color: dark, marginBottom: 14, letterSpacing: "-0.01em" }}>
+                    Ingrédients
+                  </p>
+                  <div style={{ display: "flex", gap: 10, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 4 }}>
+                    {item.ingredients.map((ing, i) => (
+                      <IngPill key={i} icon={ing.icon} name={ing.name} index={i} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              {item.description && (
+                <div>
+                  <p style={{ fontSize: 17, fontWeight: 800, color: dark, marginBottom: 10, letterSpacing: "-0.01em" }}>
+                    Description
+                  </p>
+                  <p style={{ fontSize: 13, lineHeight: 1.9, color: muted, fontFamily: "sans-serif" }}>
+                    {item.description}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Bouton retour */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -622,13 +325,13 @@ export default function ItemModal({ item, colors, onClose }: ItemModalProps) {
               style={{
                 position: "absolute",
                 top: 16,
-                right: 16,
+                left: 16,
                 width: 36,
                 height: 36,
                 borderRadius: "50%",
-                background: "rgba(0,0,0,0.6)",
-                backdropFilter: "blur(12px)",
-                border: "1px solid rgba(255,255,255,0.16)",
+                background: "rgba(255,255,255,0.22)",
+                backdropFilter: "blur(8px)",
+                border: "1px solid rgba(255,255,255,0.3)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -636,8 +339,9 @@ export default function ItemModal({ item, colors, onClose }: ItemModalProps) {
                 zIndex: 20,
               }}
             >
-              <X size={16} color="rgba(255,255,255,0.9)" />
+              <ArrowLeft size={16} color="#fff" />
             </motion.button>
+
           </motion.div>
         </motion.div>
       )}

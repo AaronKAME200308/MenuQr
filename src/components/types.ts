@@ -1,55 +1,30 @@
+// types.ts
+// Types TypeScript complets alignés sur le schéma Supabase
+
 // ─────────────────────────────────────────────────────────────
-// types.ts — Types partagés entre tous les composants Menu
+// Ingrédient (stocké en JSONB dans menu_items.ingredients)
 // ─────────────────────────────────────────────────────────────
 
-export type Colors = {
-  bg: string;
-  primary: string;
-  accent: string;
-  card: string;
-};
-
-export type Restaurant = {
-  id: string;
+export interface Ingredient {
   name: string;
-  slug: string;
-  tagline?: string;
-  address?: string;
-  phone?: string;
-  logo_url?: string;
-  color_bg?: string;
-  color_primary?: string;
-  color_accent?: string;
-  color_card?: string;
-  font_display?: string;
-  social_facebook?: string;
-  social_instagram?: string;
-  social_whatsapp?: string;
-  social_tiktok?: string;
-  social_googlemaps?: string;
-  social_website?: string;
-};
+  icon?: string; // emoji, ex: "🍅"
+}
 
-export type Category = {
-  id: string;
-  restaurant_id: string;
-  name: string;
-  icon?: string;
-  sort_order: number;
-};
+// ─────────────────────────────────────────────────────────────
+// Variante de taille / prix (stockée en JSONB dans menu_items.variants)
+// ─────────────────────────────────────────────────────────────
 
-export type MenuItemVariant = {
-  label: string;
+export interface Variant {
+  label: string;    // ex: "S", "M", "L", "Simple", "Double"
   price: number;
-  currency: string;
-};
+  currency: string; // ex: "EUR", "XAF"
+}
 
-export type Ingredient = {
-  name: string;
-  icon?: string; // emoji ou URL image
-};
+// ─────────────────────────────────────────────────────────────
+// Menu item — correspond à public.menu_items
+// ─────────────────────────────────────────────────────────────
 
-export type MenuItem = {
+export interface MenuItem {
   id: string;
   restaurant_id: string;
   category_id: string;
@@ -58,15 +33,70 @@ export type MenuItem = {
   price: number;
   currency: string;
   image_url?: string;
-  is_bestseller?: boolean;
-  is_popular?: boolean;
-  is_new?: boolean;
-  is_vegetarian?: boolean;
-  is_spicy?: boolean;
-  is_available?: boolean;
-  sort_order?: number;
-  variants?: MenuItemVariant[];
+  is_available: boolean;
+  is_bestseller: boolean;
+  is_popular: boolean;
+  is_new: boolean;
+  is_vegetarian: boolean;
+  is_spicy: boolean;
+  sort_order: number;
+  created_at: string;
+  // colonnes JSONB ajoutées par la migration
   ingredients?: Ingredient[];
-  calories?: number;
-  weight?: string;
-};
+  variants?: Variant[];
+}
+
+// ─────────────────────────────────────────────────────────────
+// Catégorie — correspond à public.categories
+// ─────────────────────────────────────────────────────────────
+
+export interface Category {
+  id: string;
+  restaurant_id: string;
+  name: string;
+  icon?: string;
+  sort_order: number;
+  created_at: string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Restaurant — correspond à public.restaurants
+// ─────────────────────────────────────────────────────────────
+
+export interface Restaurant {
+  id: string;
+  slug: string;
+  name: string;
+  tagline?: string;
+  logo_url?: string;
+  // Palette couleurs
+  color_bg: string;
+  color_primary: string;
+  color_accent: string;
+  color_card: string;
+  // Typographie
+  font_display?: string;
+  font_body?: string;
+  // Réseaux sociaux
+  social_facebook?: string;
+  social_instagram?: string;
+  social_whatsapp?: string;
+  social_tiktok?: string;
+  social_googlemaps?: string;
+  social_website?: string;
+  // Contact
+  phone?: string;
+  address?: string;
+  created_at: string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Palette de couleurs dérivée (utilisée dans tous les composants)
+// ─────────────────────────────────────────────────────────────
+
+export interface Colors {
+  bg: string;
+  primary: string;
+  accent: string;
+  card: string;
+}

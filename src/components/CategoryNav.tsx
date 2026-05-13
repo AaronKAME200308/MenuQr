@@ -1,32 +1,21 @@
 /**
- * CategoryNav.tsx
- * ───────────────
- * Barre de navigation des catégories — pilules glassmorphism animées
- * avec Framer Motion.
- *
- * Dépendances : framer-motion
- * Usage dans MenuPage : voir commentaire en bas de fichier
+ * CategoryNav.tsx — v3
+ * ─────────────────────
+ * • Pilules redessinées : style premium avec ombre, gradient actif, ring de focus
+ * • Gradients de bord gauche/droite pour indiquer le scroll possible
+ * • À utiliser dans un sticky wrapper avec SearchBar (voir note en bas)
  */
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, LayoutGroup } from "framer-motion";
 import type { Colors, Category } from "./types";
 
-// ─────────────────────────────────────────────────────────────
-// Props
-// ─────────────────────────────────────────────────────────────
-
 type CategoryNavProps = {
   colors: Colors;
-  /** Catégories qui ont au moins un item disponible */
   activeCats: Category[];
   activeCategory: string;
   setActive: (id: string) => void;
 };
-
-// ─────────────────────────────────────────────────────────────
-// Composant
-// ─────────────────────────────────────────────────────────────
 
 export default function CategoryNav({
   colors,
@@ -35,14 +24,34 @@ export default function CategoryNav({
   setActive,
 }: CategoryNavProps) {
   const navRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft]   = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // "Tout" en premier
+  // Détection scroll pour afficher les gradients de bord
+  const checkScroll = () => {
+    const el = navRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 8);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+  };
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [activeCats]);
+
   const allCats: Pick<Category, "id" | "name" | "icon">[] = [
     { id: "all", name: "Tout", icon: "🍽️" },
     ...activeCats,
   ];
 
-  // Scroll auto vers la pilule active
   const handleClick = (id: string, el: HTMLButtonElement | null) => {
     setActive(id);
     if (el && navRef.current) {
@@ -53,113 +62,192 @@ export default function CategoryNav({
   };
 
   return (
-    <motion.div
-      ref={navRef}
-      initial={{ opacity: 0, y: -12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 20,
-        padding: "10px 14px",
-        overflowX: "auto",
-        display: "flex",
-        gap: 8,
-        scrollbarWidth: "none",
-        // Glassmorphism
-        background: `${colors.bg}cc`,
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        borderBottom: `1px solid ${colors.primary}10`,
-        boxShadow: `0 1px 0 ${colors.primary}08, inset 0 1px 0 ${colors.primary}08`,
-      }}
-    >
-      <LayoutGroup id="cat-nav">
-        {allCats.map((cat, idx) => {
-          const isActive = activeCategory === cat.id;
+    <div style={{ position: "relative" }}>
 
-          return (
-            <motion.button
-              key={cat.id}
-              layout
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{
-                delay: idx * 0.055,
-                duration: 0.38,
-                ease: [0.34, 1.56, 0.64, 1],
-              }}
-              whileTap={{ scale: 0.93 }}
-              onClick={(e) => handleClick(cat.id, e.currentTarget as HTMLButtonElement)}
-              style={{
-                position: "relative",
-                flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "8px 16px",
-                borderRadius: 999,
-                fontSize: 12,
-                fontWeight: isActive ? 700 : 500,
-                fontFamily: "sans-serif",
-                whiteSpace: "nowrap",
-                cursor: "pointer",
-                outline: "none",
-                border: "none",
-                // fond transparent — le layoutId gère le fond actif
-                background: isActive
-                  ? "transparent"
-                  : "rgba(255,255,255,0.055)",
-                color: isActive ? colors.bg : `${colors.primary}65`,
-                transition: "color 0.25s, background 0.25s",
-              }}
-            >
-              {/* ── Fond animé de la pilule active (layout animation) ── */}
-              {isActive && (
-                <motion.span
-                  layoutId="active-pill"
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: 999,
-                    background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primary}cc 100%)`,
-                    boxShadow: `0 4px 20px ${colors.primary}40, inset 0 1px 0 rgba(255,255,255,0.18)`,
-                    zIndex: 0,
-                  }}
-                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                />
-              )}
+      {/* ── Gradient bord gauche ── */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0, top: 0, bottom: 0,
+          width: 40,
+          background: `linear-gradient(to right, ${colors.bg}, transparent)`,
+          zIndex: 2,
+          pointerEvents: "none",
+          opacity: canScrollLeft ? 1 : 0,
+          transition: "opacity 0.3s",
+        }}
+      />
 
-              {/* Contenu au-dessus du fond */}
-              <span style={{ position: "relative", zIndex: 1, fontSize: 15 }}>
-                {cat.icon ?? ""}
-              </span>
-              <span style={{ position: "relative", zIndex: 1 }}>{cat.name}</span>
-            </motion.button>
-          );
-        })}
-      </LayoutGroup>
-    </motion.div>
+      {/* ── Gradient bord droit ── */}
+      <div
+        style={{
+          position: "absolute",
+          right: 0, top: 0, bottom: 0,
+          width: 40,
+          background: `linear-gradient(to left, ${colors.bg}, transparent)`,
+          zIndex: 2,
+          pointerEvents: "none",
+          opacity: canScrollRight ? 1 : 0,
+          transition: "opacity 0.3s",
+        }}
+      />
+
+      {/* ── Rail de pilules ── */}
+      <motion.div
+        ref={navRef}
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          display: "flex",
+          gap: 8,
+          padding: "10px 16px 12px",
+          overflowX: "auto",
+          scrollbarWidth: "none",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        <LayoutGroup id="cat-nav-v3">
+          {allCats.map((cat, idx) => {
+            const isActive = activeCategory === cat.id;
+
+            return (
+              <motion.button
+                key={cat.id}
+                layout
+                initial={{ opacity: 0, scale: 0.8, y: 6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{
+                  delay: idx * 0.045,
+                  duration: 0.4,
+                  ease: [0.34, 1.56, 0.64, 1],
+                }}
+                whileHover={{ scale: 1.05, y: -1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => handleClick(cat.id, e.currentTarget as HTMLButtonElement)}
+                style={{
+                  position: "relative",
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: isActive ? "9px 18px" : "8px 16px",
+                  borderRadius: 999,
+                  fontSize: 12,
+                  fontWeight: isActive ? 700 : 500,
+                  fontFamily: "sans-serif",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                  outline: "none",
+                  border: isActive
+                    ? "none"
+                    : `1.5px solid ${colors.primary}14`,
+                  background: isActive ? "transparent" : `${colors.primary}09`,
+                  color: isActive ? colors.bg : `${colors.primary}70`,
+                  boxShadow: isActive
+                    ? `0 6px 20px ${colors.primary}35, 0 2px 6px ${colors.primary}20`
+                    : "0 1px 3px rgba(0,0,0,0.08)",
+                  transition: "color 0.2s, border-color 0.2s, box-shadow 0.2s, padding 0.2s",
+                }}
+              >
+                {/* Fond animé pilule active */}
+                {isActive && (
+                  <motion.span
+                    layoutId="active-pill-v3"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: 999,
+                      background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primary}dd 100%)`,
+                      boxShadow: `
+                        0 6px 20px ${colors.primary}40,
+                        0 2px 6px ${colors.primary}25,
+                        inset 0 1px 0 rgba(255,255,255,0.22)
+                      `,
+                      zIndex: 0,
+                    }}
+                    transition={{ type: "spring", stiffness: 440, damping: 34 }}
+                  />
+                )}
+
+                {/* Icône */}
+                <span style={{ position: "relative", zIndex: 1, fontSize: 14, lineHeight: 1 }}>
+                  {cat.icon ?? ""}
+                </span>
+
+                {/* Nom */}
+                <span style={{ position: "relative", zIndex: 1, letterSpacing: isActive ? "-0.01em" : "0" }}>
+                  {cat.name}
+                </span>
+
+                {/* Point actif animé */}
+                {isActive && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    style={{
+                      position: "relative",
+                      zIndex: 1,
+                      width: 5,
+                      height: 5,
+                      borderRadius: "50%",
+                      background: `${colors.bg}60`,
+                      marginLeft: 2,
+                    }}
+                  />
+                )}
+              </motion.button>
+            );
+          })}
+        </LayoutGroup>
+      </motion.div>
+    </div>
   );
 }
 
 /*
  * ─────────────────────────────────────────────────────────────
- * INTÉGRATION DANS MenuPage.tsx
+ * STICKY GROUPÉ : SearchBar + CategoryNav
+ * Dans MenuPage.tsx, remplace le bloc SearchBar + AnimatePresence
+ * CategoryNav par ce wrapper sticky :
  * ─────────────────────────────────────────────────────────────
  *
- * 1. Importer :
- *    import CategoryNav from "./CategoryNav";
- *
- * 2. Remplacer le bloc <nav …>…</nav> par :
- *
- *    <CategoryNav
+ *  <div
+ *    style={{
+ *      position: "sticky",
+ *      top: 0,
+ *      zIndex: 20,
+ *      background: `${colors.bg}d0`,
+ *      backdropFilter: "blur(20px)",
+ *      WebkitBackdropFilter: "blur(20px)",
+ *      borderBottom: `1px solid ${colors.primary}10`,
+ *    }}
+ *  >
+ *    <SearchBar
+ *      query={searchQuery}
+ *      setQuery={setSearchQuery}
  *      colors={colors}
- *      activeCats={activeCats}
- *      activeCategory={activeCategory}
- *      setActive={setActive}
+ *      resultCount={totalResults}
  *    />
+ *    <AnimatePresence>
+ *      {!searchQuery && (
+ *        <motion.div
+ *          initial={{ opacity: 0, height: 0 }}
+ *          animate={{ opacity: 1, height: "auto" }}
+ *          exit={{ opacity: 0, height: 0 }}
+ *          transition={{ duration: 0.3 }}
+ *        >
+ *          <CategoryNav
+ *            colors={colors}
+ *            activeCats={activeCats}
+ *            activeCategory={activeCategory}
+ *            setActive={setActive}
+ *          />
+ *        </motion.div>
+ *      )}
+ *    </AnimatePresence>
+ *  </div>
  *
- * C'est tout. Le composant gère scroll auto + animation spring interne.
+ * Le position: "sticky" top: 0 est sur le WRAPPER, pas sur CategoryNav.
+ * CategoryNav n'a plus besoin de son propre sticky.
  */
