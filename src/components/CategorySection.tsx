@@ -19,6 +19,7 @@ type CategorySectionProps = {
   colors: Colors;
   /** Index global de départ pour la numérotation et le stagger */
   globalIndex: number;
+  config: any;
   onOpen: (item: MenuItem) => void;
 };
 

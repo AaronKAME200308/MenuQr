@@ -1,27 +1,29 @@
 // types.ts
-// Types TypeScript complets alignés sur le schéma Supabase
 
 // ─────────────────────────────────────────────────────────────
-// Ingrédient (stocké en JSONB dans menu_items.ingredients)
+// Primitives
 // ─────────────────────────────────────────────────────────────
 
 export interface Ingredient {
   name: string;
-  icon?: string; // emoji, ex: "🍅"
+  icon?: string;
 }
-
-// ─────────────────────────────────────────────────────────────
-// Variante de taille / prix (stockée en JSONB dans menu_items.variants)
-// ─────────────────────────────────────────────────────────────
 
 export interface Variant {
-  label: string;    // ex: "S", "M", "L", "Simple", "Double"
+  label: string;
   price: number;
-  currency: string; // ex: "EUR", "XAF"
+  currency: string;
+}
+
+export interface Colors {
+  bg: string;
+  primary: string;
+  accent: string;
+  card: string;
 }
 
 // ─────────────────────────────────────────────────────────────
-// Menu item — correspond à public.menu_items
+// Supabase rows
 // ─────────────────────────────────────────────────────────────
 
 export interface MenuItem {
@@ -41,14 +43,9 @@ export interface MenuItem {
   is_spicy: boolean;
   sort_order: number;
   created_at: string;
-  // colonnes JSONB ajoutées par la migration
   ingredients?: Ingredient[];
   variants?: Variant[];
 }
-
-// ─────────────────────────────────────────────────────────────
-// Catégorie — correspond à public.categories
-// ─────────────────────────────────────────────────────────────
 
 export interface Category {
   id: string;
@@ -59,44 +56,128 @@ export interface Category {
   created_at: string;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Restaurant — correspond à public.restaurants
-// ─────────────────────────────────────────────────────────────
-
 export interface Restaurant {
   id: string;
   slug: string;
   name: string;
   tagline?: string;
   logo_url?: string;
-  // Palette couleurs
   color_bg: string;
   color_primary: string;
   color_accent: string;
   color_card: string;
-  // Typographie
   font_display?: string;
   font_body?: string;
-  // Réseaux sociaux
   social_facebook?: string;
   social_instagram?: string;
   social_whatsapp?: string;
   social_tiktok?: string;
   social_googlemaps?: string;
   social_website?: string;
-  // Contact
   phone?: string;
   address?: string;
   created_at: string;
 }
 
 // ─────────────────────────────────────────────────────────────
-// Palette de couleurs dérivée (utilisée dans tous les composants)
+// RestaurantConfig — personnalisation par restaurant
 // ─────────────────────────────────────────────────────────────
 
-export interface Colors {
-  bg: string;
-  primary: string;
-  accent: string;
-  card: string;
+/** FOND DE PAGE */
+export interface BackgroundConfig {
+  /** Pattern SVG haut : "diamonds" | "grid" | "dots" | "none" */
+  patternTop: "diamonds" | "grid" | "dots" | "none";
+  /** Pattern SVG bas */
+  patternBottom: "diamonds" | "grid" | "dots" | "none";
+  patternTopOpacity: number;
+  patternBottomOpacity: number;
+  blobTopLeft: boolean;
+  blobBottomRight: boolean;
 }
+
+/** HEADER / HERO */
+export interface HeaderConfig {
+  /** Afficher le grand "ME\nNU" éditorial */
+  showBigMenu: boolean;
+  /** Texte alternatif si showBigMenu = false */
+  heroTitle?: string;
+  /** Texture sur l'arc coloré */
+  arcTexture: "dots" | "none";
+  /** Forme du bas de l'arc */
+  arcShape: "round" | "straight";
+  /** Anneau pulsant autour du logo */
+  logoPulse: boolean;
+  /** Séparateur animé sous le nom */
+  showDivider: boolean;
+  /** Parallax au scroll */
+  parallax: boolean;
+}
+
+/** CARTES (ItemCard + CategorySection) */
+export interface CardConfig {
+  /** Disposition des cartes dans la grille */
+  layout: "grid" | "list";
+  /** Largeur minimale des colonnes (grille) */
+  gridMinWidth: number;
+  /** Rayon des coins */
+  borderRadius: number;
+  /** Image circulaire flottante en haut de la carte */
+  showFloatingImage: boolean;
+  /** Animation lévitation de l'image */
+  imageFloat: boolean;
+  /** Numéro de l'item */
+  showIndex: boolean;
+  /** Badges bestseller / populaire / nouveau */
+  showBadges: boolean;
+  /** Description courte */
+  showDescription: boolean;
+  /** Icônes végétarien / épicé */
+  showDietIcons: boolean;
+}
+
+/** MODAL (ItemModal) */
+export interface ModalConfig {
+  /** Emojis décoratifs [gauche, droite] dans le header */
+  heroEmojis: [string, string];
+  /** Texture feuilles SVG dans le header */
+  showHeroTexture: boolean;
+  /** Forme du bas du header coloré */
+  heroShape: "blob" | "straight";
+  /** Labels texte */
+  labelIngredients: string;
+  labelDescription: string;
+  labelVariants: string;
+  /** Sections visibles */
+  showIngredients: boolean;
+  showVariants: boolean;
+}
+
+/** SOCIALS */
+export interface SocialsConfig {
+  /** Texte affiché entre les deux lignes séparatrices */
+  sectionLabel: string;
+  /** Disposition */
+  layout: "grid" | "row";
+  /** Largeur min colonnes */
+  gridMinWidth: number;
+}
+
+/** Config complète — seul slug est requis, tout merge avec default */
+export interface RestaurantConfig {
+  slug: string;
+  background: BackgroundConfig;
+  header: HeaderConfig;
+  card: CardConfig;
+  modal: ModalConfig;
+  socials: SocialsConfig;
+}
+
+/** Version partielle pour les overrides par resto */
+export type PartialRestaurantConfig = {
+  slug: string;
+  background?: Partial<BackgroundConfig>;
+  header?: Partial<HeaderConfig>;
+  card?: Partial<CardConfig>;
+  modal?: Partial<ModalConfig>;
+  socials?: Partial<SocialsConfig>;
+};

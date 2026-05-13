@@ -87,7 +87,11 @@ function IngPill({ icon, name, index }: { icon?: string; name: string; index: nu
 
 // ─── Composant principal ────────────────────────────────────
 
-type Props = { item: MenuItem | null; colors: Colors; onClose: () => void };
+type Props = { 
+  item: MenuItem | null; 
+  colors: Colors;
+  config: any;
+  onClose: () => void };
 
 export default function ItemModal({ item, colors, onClose }: Props) {
   const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
