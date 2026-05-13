@@ -149,7 +149,7 @@ function AnimatedLetter({
       }}
     >
       <motion.span
-        display="inline-block"
+        className="inline-block"
         initial={{ y: "110%", opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{
