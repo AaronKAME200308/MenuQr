@@ -1,61 +1,28 @@
 /**
- * MenuPage.tsx
- * Page menu restaurant QR code — Responsive tous écrans
- * Cartes cliquables → modal cinématique (expansion in-place + overlay centré)
+ * MenuPage.tsx — REFONTE
+ * ──────────────────────
+ * ✦ Header : typo massive animée en slide + halo pulsant sur le logo
+ * ✦ Barre de recherche : sticky sous la nav, expand animé
+ * ✦ Réseaux sociaux : cartes colorées vives avec hover animé
+ *
+ * Dépendances npm :
+ *   framer-motion lucide-react react-icons @supabase/supabase-js
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
 import {
   MapPin, Phone, Globe,
-  MessageCircle, Music2, Star, Flame, Leaf,
-  ChevronRight, Sparkles, UtensilsCrossed, X,
+  MessageCircle, Music2, UtensilsCrossed, Search, X,
 } from "lucide-react";
 import { FaFacebook, FaInstagram } from "react-icons/fa";
 
-// ─────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────
+import CategoryNav     from "./CategoryNav";
+import CategorySection from "./CategorySection";
+import ItemModal       from "./ItemModal";
 
-type MenuPageProps = { slug: string };
-
-type Restaurant = {
-  id: string; name: string; slug: string;
-  tagline?: string; address?: string; phone?: string; logo_url?: string;
-  color_bg?: string; color_primary?: string; color_accent?: string; color_card?: string;
-  font_display?: string;
-  social_facebook?: string; social_instagram?: string; social_whatsapp?: string;
-  social_tiktok?: string; social_googlemaps?: string; social_website?: string;
-};
-
-type Category = {
-  id: string; restaurant_id: string; name: string; icon?: string; sort_order: number;
-};
-
-type MenuItemVariant = {
-  label: string;   // ex: "Petit", "Grand", "250ml", "500ml"
-  price: number;
-  currency: string;
-};
-
-type MenuItem = {
-  id: string; restaurant_id: string; category_id: string;
-  name: string; description?: string; price: number; currency: string;
-  image_url?: string;
-  is_bestseller?: boolean; is_popular?: boolean; is_new?: boolean;
-  is_vegetarian?: boolean; is_spicy?: boolean; is_available?: boolean;
-  sort_order?: number;
-  variants?: MenuItemVariant[];
-};
-
-type Colors = { bg: string; primary: string; accent: string; card: string };
-
-type SocialConfig = {
-  key: keyof Restaurant | "phone";
-  label: string;
-  Icon: React.ComponentType<{ size?: number; color?: string }>;
-  bg: string;
-};
+import type { Restaurant, Category, MenuItem, Colors } from "./types";
 
 // ─────────────────────────────────────────────────────────────
 // Supabase
@@ -67,55 +34,72 @@ const supabase = createClient(
 );
 
 // ─────────────────────────────────────────────────────────────
-// Helpers
+// Socials config
 // ─────────────────────────────────────────────────────────────
 
-const fmt = (price: number, currency = "EUR"): string =>
-  new Intl.NumberFormat("fr-FR", { style: "currency", currency }).format(price);
+type SocialConfig = {
+  key: keyof Restaurant | "phone";
+  label: string;
+  Icon: React.ComponentType<{ size?: number; color?: string }>;
+  gradient: string;
+  emoji: string;
+};
 
 const SOCIAL_CONFIG: SocialConfig[] = [
-  { key: "social_facebook",   label: "Facebook",     Icon: FaFacebook,    bg: "#1877F2" },
-  { key: "social_instagram",  label: "Instagram",    Icon: FaInstagram,   bg: "#E1306C" },
-  { key: "social_whatsapp",   label: "WhatsApp",     Icon: MessageCircle, bg: "#25D366" },
-  { key: "social_tiktok",     label: "TikTok",       Icon: Music2,        bg: "#010101" },
-  { key: "social_googlemaps", label: "Nous trouver", Icon: MapPin,        bg: "#EA4335" },
-  { key: "social_website",    label: "Site web",     Icon: Globe,         bg: "#4A4A4A" },
+  {
+    key: "social_facebook", label: "Facebook", Icon: FaFacebook,
+    gradient: "linear-gradient(135deg, #1877F2, #0a5dc2)", emoji: "👥",
+  },
+  {
+    key: "social_instagram", label: "Instagram", Icon: FaInstagram,
+    gradient: "linear-gradient(135deg, #f09433, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888)", emoji: "📸",
+  },
+  {
+    key: "social_whatsapp", label: "WhatsApp", Icon: MessageCircle,
+    gradient: "linear-gradient(135deg, #25D366, #128C7E)", emoji: "💬",
+  },
+  {
+    key: "social_tiktok", label: "TikTok", Icon: Music2,
+    gradient: "linear-gradient(135deg, #010101, #69C9D0 50%, #EE1D52)", emoji: "🎵",
+  },
+  {
+    key: "social_googlemaps", label: "Nous trouver", Icon: MapPin,
+    gradient: "linear-gradient(135deg, #EA4335, #FBBC05 60%, #34A853)", emoji: "📍",
+  },
+  {
+    key: "social_website", label: "Site web", Icon: Globe,
+    gradient: "linear-gradient(135deg, #667eea, #764ba2)", emoji: "🌐",
+  },
 ];
-
-// const LIST_CATEGORIES = ["Boissons", "Vins & Spiritueux", "Desserts", "Accompagnements", "Entrées"];
 
 // ─────────────────────────────────────────────────────────────
 // Global styles
 // ─────────────────────────────────────────────────────────────
 
 const GLOBAL_STYLES = `
-  @keyframes spin      { to { transform: rotate(360deg) } }
-  @keyframes slideUp   { from { transform: translateY(40px) scale(0.97); opacity: 0 } to { transform: translateY(0) scale(1); opacity: 1 } }
-  @keyframes modalIn   { from { opacity: 0; transform: scale(0.93) } to { opacity: 1; transform: scale(1) } }
-  @keyframes overlayIn { from { opacity: 0 } to { opacity: 1 } }
-
-  nav::-webkit-scrollbar { display: none }
-
-  .item-card {
-    cursor: pointer;
-    transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.22s ease;
+  @keyframes spin { to { transform: rotate(360deg) } }
+  @keyframes halo-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.12); }
   }
-  .item-card:hover  { transform: translateY(-5px) scale(1.025); box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
-  .item-card:active { transform: scale(0.96); }
-
-  .item-row { cursor: pointer; transition: background 0.18s; }
-  .item-row:hover { background: rgba(255,255,255,0.04) !important; }
+  @keyframes slide-up-letter {
+    from { transform: translateY(110%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  nav::-webkit-scrollbar { display: none }
+  * { box-sizing: border-box; }
+  ::-webkit-scrollbar { display: none; }
 `;
 
 // ─────────────────────────────────────────────────────────────
-// Arrière-plan
+// Background décoratif
 // ─────────────────────────────────────────────────────────────
 
 function StyledBackground({ colors }: { colors: Colors }) {
   return (
-    <div className="fixed inset-0 overflow-hidden" style={{ zIndex: 0, pointerEvents: "none" }}>
-      <div className="absolute inset-0" style={{ background: colors.bg }} />
-      <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+    <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", overflow: "hidden" }}>
+      <div style={{ position: "absolute", inset: 0, background: colors.bg }} />
+      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="bg-kente" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
             <polygon points="30,2 58,30 30,58 2,30" fill="none" stroke={colors.primary} strokeWidth="0.8" opacity="1" />
@@ -125,348 +109,506 @@ function StyledBackground({ colors }: { colors: Colors }) {
           <pattern id="bg-leaves" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
             <path d="M10,50 Q25,10 40,50 Q25,90 10,50 Z" fill="none" stroke={colors.primary} strokeWidth="0.6" opacity="1" />
             <line x1="10" y1="50" x2="40" y2="50" stroke={colors.primary} strokeWidth="0.4" opacity="1" />
-            <path d="M60,20 Q75,5 85,20 Q75,35 60,20 Z" fill="none" stroke={colors.primary} strokeWidth="0.5" opacity="1" />
-            <path d="M65,70 Q80,55 90,70 Q80,85 65,70 Z" fill="none" stroke={colors.primary} strokeWidth="0.5" opacity="1" />
           </pattern>
           <pattern id="bg-wax" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
             <rect x="12" y="0" width="6" height="30" fill={colors.primary} opacity="0.15" />
             <rect x="0" y="12" width="30" height="6" fill={colors.primary} opacity="0.15" />
           </pattern>
-          <filter id="bg-grain" x="0%" y="0%" width="100%" height="100%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4" stitchTiles="stitch" result="noise" />
-            <feColorMatrix type="saturate" values="0" in="noise" result="grey" />
-            <feBlend in="SourceGraphic" in2="grey" mode="soft-light" result="blend" />
-            <feComposite in="blend" in2="SourceGraphic" operator="in" />
-          </filter>
         </defs>
         <rect x="0" y="0" width="100%" height="45%" fill="url(#bg-kente)" opacity="0.06" />
         <rect x="0" y="30%" width="100%" height="45%" fill="url(#bg-wax)" opacity="0.07" />
         <rect x="0" y="55%" width="100%" height="45%" fill="url(#bg-leaves)" opacity="0.07" />
-        <rect x="0" y="0" width="100%" height="100%" fill={colors.bg} filter="url(#bg-grain)" opacity="0.07" />
       </svg>
-      <div className="absolute" style={{ top: "-15%", left: "-15%", width: "55%", height: "55%", background: `radial-gradient(ellipse, ${colors.accent}60 0%, transparent 65%)`, filter: "blur(70px)" }} />
-      <div className="absolute" style={{ bottom: "5%", right: "-10%", width: "50%", height: "45%", background: `radial-gradient(ellipse, ${colors.accent}35 0%, transparent 65%)`, filter: "blur(90px)" }} />
-      <div className="absolute inset-0" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`, backgroundRepeat: "repeat", backgroundSize: "200px 200px", opacity: 0.035, mixBlendMode: "overlay" }} />
+      <div style={{ position: "absolute", top: "-15%", left: "-15%", width: "55%", height: "55%", background: `radial-gradient(ellipse, ${colors.accent}60 0%, transparent 65%)`, filter: "blur(70px)" }} />
+      <div style={{ position: "absolute", bottom: "5%", right: "-10%", width: "50%", height: "45%", background: `radial-gradient(ellipse, ${colors.accent}35 0%, transparent 65%)`, filter: "blur(90px)" }} />
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// Badge
+// AnimatedLetter — pour le MENU massif
 // ─────────────────────────────────────────────────────────────
 
-function DishBadge({ item }: { item: MenuItem }) {
-  const base = "inline-flex items-center gap-1 rounded-full font-bold";
-  const s: React.CSSProperties = { fontSize: 9, padding: "2px 8px" };
-  if (item.is_bestseller) return <span className={base} style={{ ...s, background: "linear-gradient(135deg,#c8a84b,#f5d98b)", color: "#3a2800" }}><Star size={8} fill="#3a2800" strokeWidth={0} /> Best Seller</span>;
-  if (item.is_popular)    return <span className={base} style={{ ...s, background: "rgba(255,100,50,0.18)", color: "#ff9060" }}><Flame size={8} /> Populaire</span>;
-  if (item.is_new)        return <span className={base} style={{ ...s, background: "rgba(80,200,120,0.18)", color: "#50c878" }}><Sparkles size={8} /> Nouveau</span>;
-  return null;
-}
-
-// ─────────────────────────────────────────────────────────────
-// Modal détail cinématique
-// ─────────────────────────────────────────────────────────────
-
-function ItemModal({ item, colors, onClose }: { item: MenuItem; colors: Colors; onClose: () => void }) {
-  const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, []);
-
-  const displayPrice    = selectedVariant !== null && item.variants ? item.variants[selectedVariant].price    : item.price;
-  const displayCurrency = selectedVariant !== null && item.variants ? item.variants[selectedVariant].currency : item.currency;
-
-  // Couleur accent derivée pour le prix (évite l'invisible si accent == primary)
-  const priceColor = "#f5d98b";
-
+function AnimatedLetter({
+  char,
+  delay,
+  colors,
+  fontFamily,
+}: {
+  char: string;
+  delay: number;
+  colors: Colors;
+  fontFamily: string;
+}) {
   return (
-    <div
-      onClick={onClose}
+    <span
       style={{
-        position: "fixed", inset: 0, zIndex: 100,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "16px",
-        background: "rgba(0,0,0,0.75)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        animation: "overlayIn 0.25s ease",
+        display: "inline-block",
+        overflow: "hidden",
+        lineHeight: 0.85,
       }}
     >
-      <div
-        onClick={e => e.stopPropagation()}
+      <motion.span
+        display="inline-block"
+        initial={{ y: "110%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{
+          delay,
+          duration: 0.65,
+          ease: [0.22, 1, 0.36, 1],
+        }}
         style={{
-          position: "relative",
-          width: "100%", maxWidth: 500,
-          maxHeight: "88vh",
-          borderRadius: 24,
-          overflow: "hidden",
-          background: colors.card,
-          border: `1px solid ${colors.primary}18`,
-          boxShadow: `0 40px 100px rgba(0,0,0,0.65), inset 0 1px 0 ${colors.primary}12`,
-          animation: "modalIn 0.32s cubic-bezier(.34,1.4,.64,1)",
-          display: "flex", flexDirection: "column",
+          display: "inline-block",
+          fontSize: "clamp(64px, 19vw, 108px)",
+          fontWeight: 900,
+          letterSpacing: "-0.04em",
+          color: colors.primary,
+          fontFamily,
         }}
       >
-        {/* ── Image cinématique plein cadre ── */}
-        <div style={{ position: "relative", width: "100%", paddingTop: "60%", flexShrink: 0 }}>
-          {item.image_url ? (
-            <img
-              src={item.image_url} alt={item.name}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          ) : (
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 80, background: `${colors.bg}90` }}>🍽️</div>
-          )}
-
-          {/* Vignette latérale + dégradé bas cinématique */}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: `
-              linear-gradient(to top,  ${colors.card} 0%, ${colors.card}dd 22%, transparent 55%),
-              linear-gradient(to right, ${colors.card}55 0%, transparent 25%),
-              linear-gradient(to left,  ${colors.card}33 0%, transparent 20%)
-            `,
-          }} />
-
-          {/* Titre + prix superposés */}
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "16px 22px 14px" }}>
-            <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
-              <DishBadge item={item} />
-            </div>
-            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
-              <h2 style={{
-                flex: 1, fontSize: "clamp(19px,5vw,25px)", fontWeight: 900,
-                lineHeight: 1.15, color: colors.primary,
-                letterSpacing: "-0.025em",
-                textShadow: "0 2px 16px rgba(0,0,0,0.5)",
-              }}>{item.name}</h2>
-              <p style={{
-                flexShrink: 0,
-                fontSize: "clamp(20px,5vw,26px)", fontWeight: 900,
-                color: priceColor, letterSpacing: "-0.02em",
-                textShadow: `0 0 24px ${priceColor}50`,
-                animation: "slideUp 0.35s ease 0.1s both",
-              }}>
-                {fmt(displayPrice, displayCurrency)}
-              </p>
-            </div>
-          </div>
-
-          {/* Icônes diète */}
-          <div style={{ position: "absolute", top: 14, left: 14, display: "flex", gap: 6 }}>
-            {item.is_vegetarian && <span style={{ width: 28, height: 28, borderRadius: "50%", background: "#50c878dd", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}><Leaf size={13} color="#fff" /></span>}
-            {item.is_spicy      && <span style={{ width: 28, height: 28, borderRadius: "50%", background: "#ff4500dd", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}><Flame size={13} color="#fff" /></span>}
-          </div>
-        </div>
-
-        {/* ── Corps scrollable ── */}
-        <div style={{ overflowY: "auto", flex: 1, padding: "4px 22px 28px", scrollbarWidth: "none" }}>
-
-          {/* Description */}
-          {item.description && (
-            <div style={{ marginTop: 14, animation: "slideUp 0.35s ease 0.12s both" }}>
-              <p style={{ fontSize: 14, lineHeight: 1.8, color: `${colors.primary}80`, fontFamily: "sans-serif" }}>
-                {item.description}
-              </p>
-            </div>
-          )}
-
-          {/* Variantes */}
-          {item.variants && item.variants.length > 0 && (
-            <div style={{ marginTop: 20, animation: "slideUp 0.35s ease 0.18s both" }}>
-              <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: `${colors.primary}40`, fontFamily: "sans-serif", marginBottom: 10 }}>
-                Taille / Variante
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {item.variants.map((v, i) => {
-                  const isSelected = selectedVariant === i;
-                  return (
-                    <button key={i} onClick={() => setSelectedVariant(isSelected ? null : i)}
-                      style={{
-                        display: "flex", flexDirection: "column", alignItems: "center",
-                        padding: "10px 18px", borderRadius: 12,
-                        border: `1.5px solid ${isSelected ? colors.primary : `${colors.primary}20`}`,
-                        background: isSelected ? `${colors.primary}18` : "rgba(255,255,255,0.04)",
-                        cursor: "pointer", transition: "all 0.18s", minWidth: 72,
-                      }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: colors.primary }}>{v.label}</span>
-                      <span style={{ fontSize: 11, marginTop: 2, color: `${colors.primary}65`, fontFamily: "sans-serif" }}>{fmt(v.price, v.currency)}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          <div style={{ margin: "20px 0 0", height: 1, background: `linear-gradient(to right, transparent, ${colors.primary}18, transparent)` }} />
-        </div>
-
-        {/* ── Fermer ── */}
-        <button onClick={onClose}
-          style={{
-            position: "absolute", top: 14, right: 14,
-            width: 34, height: 34, borderRadius: "50%",
-            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", transition: "transform 0.18s, background 0.18s", zIndex: 10,
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.12)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
-        >
-          <X size={16} color="rgba(255,255,255,0.85)" />
-        </button>
-      </div>
-    </div>
+        {char}
+      </motion.span>
+    </span>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// Carte grille
+// Hero header
 // ─────────────────────────────────────────────────────────────
 
-function ItemCard({ item, colors, index, onOpen }: { item: MenuItem; colors: Colors; index: number; onOpen: (item: MenuItem) => void }) {
+function HeroHeader({
+  restaurant,
+  colors,
+}: {
+  restaurant: Restaurant;
+  colors: Colors;
+}) {
+  const letters = ["M", "E", "N", "U"];
+  const fontFamily = restaurant.font_display ?? "Georgia, serif";
+
   return (
-    <div
-      className="item-card"
-      onClick={() => onOpen(item)}
-      role="button" tabIndex={0}
-      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") onOpen(item); }}
+    <motion.header
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
       style={{
-        display: "flex", flexDirection: "column",
-        background: `${colors.card}d0`,
-        border: `1px solid ${colors.primary}14`,
-        borderRadius: 16,
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
-        overflow: "hidden", outline: "none",
+        padding: "clamp(40px, 10vw, 72px) 24px clamp(28px, 7vw, 52px)",
+        textAlign: "center",
+        position: "relative",
       }}
     >
-      {/* Image */}
-      <div style={{ position: "relative", width: "100%", paddingTop: "72%" }}>
-        {item.image_url
-          ? <img src={item.image_url} alt={item.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-          : <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, background: `${colors.bg}60` }}>🍽️</div>
-        }
-        {/* Gradient bas */}
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "50%", background: `linear-gradient(to top, ${colors.card}e0, transparent)` }} />
+      {/* Ligne décorative haut */}
+      <motion.div
+        initial={{ scaleX: 0, opacity: 0 }}
+        animate={{ scaleX: 1, opacity: 1 }}
+        transition={{ delay: 0.05, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          width: 60,
+          height: 1,
+          background: `linear-gradient(to right, transparent, ${colors.primary}50, transparent)`,
+          margin: "0 auto 24px",
+        }}
+      />
 
-        {/* Numéro */}
-        <div style={{ position: "absolute", top: 8, left: 8, width: 22, height: 22, borderRadius: "50%", background: `${colors.accent}cc`, backdropFilter: "blur(4px)", color: colors.primary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, border: `1px solid ${colors.primary}25` }}>
-          {index + 1}
+      {/* Logo avec halo pulsant */}
+      <motion.div
+        initial={{ scale: 0.6, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.08, type: "spring", stiffness: 280, damping: 20 }}
+        style={{ position: "relative", width: 88, height: 88, margin: "0 auto 24px" }}
+      >
+        {/* Halo 1 */}
+        <div
+          style={{
+            position: "absolute",
+            inset: -18,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, ${colors.accent}55 0%, transparent 70%)`,
+            animation: "halo-pulse 2.8s ease-in-out infinite",
+          }}
+        />
+        {/* Halo 2 (décalé) */}
+        <div
+          style={{
+            position: "absolute",
+            inset: -8,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, ${colors.accent}30 0%, transparent 70%)`,
+            animation: "halo-pulse 2.8s ease-in-out infinite 1.4s",
+          }}
+        />
+        {/* Cercle logo */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 1,
+            width: "100%",
+            height: "100%",
+            borderRadius: "50%",
+            border: `2px solid ${colors.primary}25`,
+            background: `rgba(255,255,255,0.06)`,
+            backdropFilter: "blur(12px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+          }}
+        >
+          {restaurant.logo_url
+            ? <img src={restaurant.logo_url} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : <span style={{ fontSize: 40 }}>🍽️</span>
+          }
         </div>
+      </motion.div>
 
-        {/* Badge */}
-        <div style={{ position: "absolute", bottom: 8, left: 8 }}><DishBadge item={item} /></div>
+      {/* Label Restaurant */}
+      <motion.p
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.4 }}
+        style={{
+          fontSize: 9,
+          letterSpacing: "0.5em",
+          color: `${colors.primary}40`,
+          fontFamily: "sans-serif",
+          textTransform: "uppercase",
+          marginBottom: 8,
+        }}
+      >
+        Restaurant
+      </motion.p>
 
-        {/* Icônes diète */}
-        <div style={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 4 }}>
-          {item.is_vegetarian && <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#50c878cc", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Leaf size={10} color="#fff" /></span>}
-          {item.is_spicy      && <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#ff4500cc", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }}><Flame size={10} color="#fff" /></span>}
-        </div>
-
-        {/* Indicator variantes */}
-        {item.variants && item.variants.length > 0 && (
-          <div style={{ position: "absolute", bottom: 8, right: 8, fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 20, background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", color: `${colors.primary}bb`, border: `1px solid ${colors.primary}20` }}>
-            {item.variants.length} tailles
-          </div>
-        )}
+      {/* MENU — lettres animées */}
+      <div style={{ display: "flex", justifyContent: "center", gap: "0.04em", marginBottom: 10 }}>
+        {letters.map((char, i) => (
+          <AnimatedLetter
+            key={i}
+            char={char}
+            delay={0.28 + i * 0.07}
+            colors={colors}
+            fontFamily={fontFamily}
+          />
+        ))}
       </div>
 
-      {/* Infos */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 3, padding: "10px 12px 12px", flex: 1 }}>
-        <p style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.25, color: colors.primary, letterSpacing: "-0.01em" }}>{item.name}</p>
-        {item.description && (
-          <p style={{ fontSize: 10, lineHeight: 1.5, color: `${colors.primary}50`, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>
-            {item.description}
-          </p>
-        )}
-        <div style={{ marginTop: "auto", paddingTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <p style={{ fontSize: 15, fontWeight: 800, color: colors.primary, letterSpacing: "-0.02em" }}>{fmt(item.price, item.currency)}</p>
-          <span style={{ fontSize: 9, fontWeight: 600, color: `${colors.primary}32`, fontFamily: "sans-serif", letterSpacing: "0.05em" }}>voir →</span>
-        </div>
-      </div>
-    </div>
+      {/* Nom du restaurant */}
+      <motion.h1
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.68, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          fontSize: "clamp(16px, 4.5vw, 24px)",
+          letterSpacing: "0.18em",
+          color: colors.primary,
+          fontFamily,
+          fontWeight: 400,
+          margin: "0 0 12px",
+        }}
+      >
+        {restaurant.name}
+      </motion.h1>
+
+      <motion.div
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ delay: 0.78, duration: 0.5 }}
+        style={{ width: 44, height: 1, background: `${colors.primary}28`, margin: "0 auto 10px" }}
+      />
+
+      {restaurant.tagline && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.85 }}
+          style={{ fontSize: 11, letterSpacing: "0.1em", color: `${colors.primary}40`, fontFamily: "sans-serif" }}
+        >
+          {restaurant.tagline}
+        </motion.p>
+      )}
+
+      {restaurant.address && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.9 }}
+          style={{ fontSize: 11, color: `${colors.primary}35`, fontFamily: "sans-serif", marginTop: 6, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+        >
+          <MapPin size={10} />
+          {restaurant.address}
+        </motion.p>
+      )}
+    </motion.header>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// Ligne liste
+// SearchBar — sticky, expand animé
 // ─────────────────────────────────────────────────────────────
 
-// function ItemRow({ item, colors, index, onOpen }: { item: MenuItem; colors: Colors; index: number; onOpen: (item: MenuItem) => void }) {
-//   return (
-//     <div
-//       className="item-row"
-//       onClick={() => onOpen(item)}
-//       role="button" tabIndex={0}
-//       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") onOpen(item); }}
-//       style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: `1px solid ${colors.primary}08`, outline: "none", cursor: "pointer" }}
-//     >
-//       <div style={{ width: 24, height: 24, borderRadius: "50%", flexShrink: 0, background: `${colors.accent}cc`, color: colors.primary, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800 }}>
-//         {index + 1}
-//       </div>
-//       <div style={{ flex: 1, minWidth: 0 }}>
-//         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-//           <p style={{ fontSize: 13, fontWeight: 700, color: colors.primary }}>{item.name}</p>
-//           <DishBadge item={item} />
-//           {item.is_vegetarian && <Leaf size={11} color="#50c878" />}
-//           {item.is_spicy      && <Flame size={11} color="#ff6030" />}
-//         </div>
-//         {item.description && <p style={{ fontSize: 10, marginTop: 2, lineHeight: 1.5, color: `${colors.primary}50`, fontFamily: "sans-serif" }}>{item.description}</p>}
-//         {item.variants && item.variants.length > 0 && <p style={{ fontSize: 9, marginTop: 3, color: `${colors.primary}35`, fontFamily: "sans-serif" }}>{item.variants.map(v => v.label).join(" · ")}</p>}
-//       </div>
-//       <div style={{ flexShrink: 0, textAlign: "right" }}>
-//         <p style={{ fontSize: 14, fontWeight: 800, color: colors.primary }}>{fmt(item.price, item.currency)}</p>
-//         <p style={{ fontSize: 9, color: `${colors.primary}30`, fontFamily: "sans-serif", marginTop: 1 }}>voir →</p>
-//       </div>
-//     </div>
-//   );
-// }
+function SearchBar({
+  colors,
+  value,
+  onChange,
+}: {
+  colors: Colors;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [focused, setFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-// ─────────────────────────────────────────────────────────────
-// Section catégorie
-// ─────────────────────────────────────────────────────────────
-
-function CategorySection({ category, items, colors, globalIndex, onOpen }: { category: Category; items: MenuItem[]; colors: Colors; globalIndex: number; onOpen: (item: MenuItem) => void }) {
   return (
-    <section style={{ marginBottom: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px", borderTop: `1px solid ${colors.primary}10` }}>
-        {category.icon && <span style={{ fontSize: 18 }}>{category.icon}</span>}
-        <h2 style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: `${colors.primary}45`, fontFamily: "sans-serif" }}>{category.name}</h2>
-      </div>
-        <div style={{ padding: "0 16px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))", gap: 14 }}>
-            {items.map((item, i) => <ItemCard key={item.id} item={item} colors={colors} index={globalIndex + i} onOpen={onOpen} />)}
-          </div>
-    </section>
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5, duration: 0.4 }}
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
+        padding: "10px 16px",
+        background: `${colors.bg}e0`,
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderBottom: `1px solid ${colors.primary}08`,
+      }}
+    >
+      <motion.div
+        animate={{
+          borderColor: focused ? `${colors.accent}60` : `${colors.primary}18`,
+          boxShadow: focused
+            ? `0 0 0 3px ${colors.accent}18, 0 4px 20px rgba(0,0,0,0.25)`
+            : "0 2px 8px rgba(0,0,0,0.12)",
+        }}
+        transition={{ duration: 0.22 }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "10px 16px",
+          borderRadius: 16,
+          background: "rgba(255,255,255,0.05)",
+          border: `1.5px solid ${colors.primary}18`,
+          cursor: "text",
+        }}
+        onClick={() => inputRef.current?.focus()}
+      >
+        <motion.div
+          animate={{ color: focused ? colors.accent : `${colors.primary}40` }}
+          transition={{ duration: 0.18 }}
+        >
+          <Search size={16} />
+        </motion.div>
+
+        <input
+          ref={inputRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder="Rechercher un plat…"
+          style={{
+            flex: 1,
+            background: "transparent",
+            border: "none",
+            outline: "none",
+            fontSize: 13,
+            color: colors.primary,
+            fontFamily: "sans-serif",
+            caretColor: colors.accent,
+          }}
+        />
+
+        <AnimatePresence>
+          {value && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ duration: 0.15 }}
+              onClick={() => onChange("")}
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                background: `${colors.primary}20`,
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                padding: 0,
+                flexShrink: 0,
+              }}
+            >
+              <X size={11} color={`${colors.primary}70`} />
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Badge nombre de résultats */}
+      <AnimatePresence>
+        {value && (
+          <motion.p
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: "auto", marginTop: 6 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            style={{
+              fontSize: 10,
+              color: `${colors.primary}45`,
+              fontFamily: "sans-serif",
+              textAlign: "center",
+              letterSpacing: "0.05em",
+              overflow: "hidden",
+            }}
+          >
+            Résultats pour « {value} »
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// Composant principal
+// SocialCard — colorée et fun
 // ─────────────────────────────────────────────────────────────
+
+function SocialCard({
+  social,
+  index,
+}: {
+  social: { key: string; label: string; Icon: React.ComponentType<{ size?: number; color?: string }>; gradient: string; emoji: string; href: string };
+  index: number;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <motion.a
+      href={social.href}
+      target="_blank"
+      rel="noreferrer"
+      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.06, duration: 0.4, ease: [0.34, 1.4, 0.64, 1] }}
+      whileHover={{ scale: 1.04, y: -3 }}
+      whileTap={{ scale: 0.97 }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      style={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 10,
+        padding: "18px 12px 14px",
+        borderRadius: 20,
+        background: hovered
+          ? social.gradient
+          : "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        textDecoration: "none",
+        overflow: "hidden",
+        transition: "background 0.28s ease",
+        cursor: "pointer",
+      }}
+    >
+      {/* Fond gradient doux en permanence */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: social.gradient,
+          opacity: hovered ? 1 : 0.12,
+          transition: "opacity 0.28s ease",
+          borderRadius: 20,
+        }}
+      />
+
+      {/* Icône */}
+      <motion.div
+        animate={hovered ? { rotate: [0, -8, 8, 0], scale: 1.15 } : { rotate: 0, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: 48,
+          height: 48,
+          borderRadius: 14,
+          background: "rgba(255,255,255,0.18)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: hovered ? "0 8px 24px rgba(0,0,0,0.3)" : "none",
+          transition: "box-shadow 0.25s ease",
+        }}
+      >
+        <social.Icon size={22} color="#fff" />
+      </motion.div>
+
+      {/* Label */}
+      <p
+        style={{
+          position: "relative",
+          zIndex: 1,
+          fontSize: 11,
+          fontWeight: 700,
+          color: hovered ? "#fff" : "rgba(255,255,255,0.6)",
+          fontFamily: "sans-serif",
+          letterSpacing: "0.04em",
+          margin: 0,
+          transition: "color 0.25s ease",
+        }}
+      >
+        {social.label}
+      </p>
+
+      {/* Emoji flottant au hover */}
+      <AnimatePresence>
+        {hovered && (
+          <motion.span
+            initial={{ opacity: 0, y: 0, scale: 0.5 }}
+            animate={{ opacity: 1, y: -8, scale: 1 }}
+            exit={{ opacity: 0, y: -14, scale: 0.5 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 10,
+              fontSize: 16,
+              zIndex: 2,
+            }}
+          >
+            {social.emoji}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.a>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// MenuPage — composant principal
+// ─────────────────────────────────────────────────────────────
+
+type MenuPageProps = { slug: string };
 
 export default function MenuPage({ slug }: MenuPageProps) {
-  const [restaurant, setRestaurant]   = useState<Restaurant | null>(null);
-  const [categories, setCategories]   = useState<Category[]>([]);
-  const [items, setItems]             = useState<MenuItem[]>([]);
-  const [activeCategory, setActive]   = useState<string>("all");
-  const [loading, setLoading]         = useState<boolean>(true);
-  const [error, setError]             = useState<string | null>(null);
+  const [restaurant, setRestaurant]     = useState<Restaurant | null>(null);
+  const [categories, setCategories]     = useState<Category[]>([]);
+  const [items, setItems]               = useState<MenuItem[]>([]);
+  const [activeCategory, setActive]     = useState<string>("all");
+  const [loading, setLoading]           = useState<boolean>(true);
+  const [error, setError]               = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [searchQuery, setSearchQuery]   = useState<string>("");
 
   const openModal  = useCallback((item: MenuItem) => setSelectedItem(item), []);
   const closeModal = useCallback(() => setSelectedItem(null), []);
 
+  // ── Data fetching ────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       try {
@@ -497,6 +639,7 @@ export default function MenuPage({ slug }: MenuPageProps) {
     load();
   }, [slug]);
 
+  // ── Couleurs ─────────────────────────────────────────────────
   const colors: Colors = {
     bg:      restaurant?.color_bg      ?? "#0a2e20",
     primary: restaurant?.color_primary ?? "#F5E6C8",
@@ -504,183 +647,211 @@ export default function MenuPage({ slug }: MenuPageProps) {
     card:    restaurant?.color_card    ?? "#0d3d28",
   };
 
-  if (loading) return (
-    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, background: colors.bg }}>
-      <style>{GLOBAL_STYLES}</style>
-      <StyledBackground colors={colors} />
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-        <div style={{ width: 48, height: 48, borderRadius: "50%", border: `2px solid ${colors.primary}30`, borderTopColor: colors.primary, animation: "spin 0.8s linear infinite" }} />
-        <p style={{ fontSize: 11, letterSpacing: 4, color: `${colors.primary}55`, fontFamily: "sans-serif" }}>CHARGEMENT…</p>
+  // ── Loading ──────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, background: colors.bg }}>
+        <style>{GLOBAL_STYLES}</style>
+        <StyledBackground colors={colors} />
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", border: `2px solid ${colors.primary}30`, borderTopColor: colors.primary, animation: "spin 0.8s linear infinite" }} />
+          <p style={{ fontSize: 11, letterSpacing: 4, color: `${colors.primary}55`, fontFamily: "sans-serif" }}>CHARGEMENT…</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  if (error !== null || restaurant === null) return (
-    <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: colors.bg }}>
-      <style>{GLOBAL_STYLES}</style>
-      <StyledBackground colors={colors} />
-      <div style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "0 32px" }}>
-        <UtensilsCrossed size={40} style={{ color: `${colors.primary}40`, margin: "0 auto 16px" }} />
-        <p style={{ color: colors.primary, fontFamily: "sans-serif" }}>Restaurant introuvable.</p>
+  if (error !== null || restaurant === null) {
+    return (
+      <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: colors.bg }}>
+        <style>{GLOBAL_STYLES}</style>
+        <StyledBackground colors={colors} />
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "0 32px" }}>
+          <UtensilsCrossed size={40} style={{ color: `${colors.primary}40`, margin: "0 auto 16px" }} />
+          <p style={{ color: colors.primary, fontFamily: "sans-serif" }}>Restaurant introuvable.</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
+  // ── Filtrage + recherche ─────────────────────────────────────
   const itemsByCategory = categories.reduce<Record<string, MenuItem[]>>((acc, cat) => {
     acc[cat.id] = items.filter(i => i.category_id === cat.id);
     return acc;
   }, {});
 
-  const activeCats   = categories.filter(c => (itemsByCategory[c.id] ?? []).length > 0);
-  const filteredCats = activeCategory === "all" ? activeCats : activeCats.filter(c => c.id === activeCategory);
+  const activeCats = categories.filter(c => (itemsByCategory[c.id] ?? []).length > 0);
 
-  const socials: Array<SocialConfig & { href: string }> = [
+  // Filtre par recherche
+  const searchNorm = searchQuery.trim().toLowerCase();
+
+  let filteredCats = activeCategory === "all"
+    ? activeCats
+    : activeCats.filter(c => c.id === activeCategory);
+
+  // Si recherche active, override la catégorie active et filtre les items
+  const filteredItemsByCategory: Record<string, MenuItem[]> = {};
+  for (const cat of filteredCats) {
+    const base = itemsByCategory[cat.id] ?? [];
+    filteredItemsByCategory[cat.id] = searchNorm
+      ? base.filter(
+          item =>
+            item.name.toLowerCase().includes(searchNorm) ||
+            item.description?.toLowerCase().includes(searchNorm) ||
+            item.ingredients?.some((ing: { name: string }) => ing.name.toLowerCase().includes(searchNorm))
+        )
+      : base;
+  }
+
+  // Cacher catégories vides après recherche
+  const displayCats = filteredCats.filter(c => (filteredItemsByCategory[c.id] ?? []).length > 0);
+
+  // Socials
+  const socials = [
     ...SOCIAL_CONFIG
       .filter(s => s.key !== "phone" && Boolean(restaurant[s.key as keyof Restaurant]))
-      .map(s => ({ ...s, href: restaurant[s.key as keyof Restaurant] as string })),
-    ...(restaurant.phone ? [{ key: "phone" as const, label: "Appeler", Icon: Phone, bg: "#555", href: `tel:${restaurant.phone}` }] : []),
+      .map(s => ({
+        ...s,
+        href: restaurant[s.key as keyof Restaurant] as string,
+      })),
+    ...(restaurant.phone
+      ? [{
+          key: "phone" as const,
+          label: "Appeler",
+          Icon: Phone,
+          gradient: "linear-gradient(135deg, #555, #333)",
+          emoji: "📞",
+          href: `tel:${restaurant.phone}`,
+        }]
+      : []),
   ];
 
   let globalIdx = 0;
 
+  // ── Rendu ────────────────────────────────────────────────────
   return (
     <>
       <style>{GLOBAL_STYLES}</style>
       <StyledBackground colors={colors} />
 
-      {selectedItem && <ItemModal item={selectedItem} colors={colors} onClose={closeModal} />}
+      <ItemModal item={selectedItem} colors={colors} onClose={closeModal} />
 
-      <div style={{ position: "relative", zIndex: 1, minHeight: "100vh", width: "100%" }}>
+      <div style={{ position: "relative", zIndex: 1, minHeight: "100vh", width: "100%", overflow: "visible" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", width: "100%" }}>
 
-          {/* ── HERO ── */}
-          <header style={{ padding: "clamp(32px,8vw,64px) 24px clamp(24px,6vw,48px)", textAlign: "center" }}>
-            <div style={{ width: 84, height: 84, borderRadius: "50%", border: `2px solid ${colors.primary}30`, background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)", margin: "0 auto 20px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-              {restaurant.logo_url ? <img src={restaurant.logo_url} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 38 }}>🍽️</span>}
-            </div>
-            <p style={{ fontSize: 10, letterSpacing: 4, color: `${colors.primary}45`, fontFamily: "sans-serif", textTransform: "uppercase", marginBottom: 6 }}>Restaurant</p>
-            <div style={{ fontSize: "clamp(60px, 18vw, 96px)", lineHeight: 0.82, fontWeight: 900, letterSpacing: "-0.03em", color: colors.primary, fontFamily: restaurant.font_display ?? "Georgia, serif", userSelect: "none" }}>ME<br />NU</div>
-            <h1 style={{ marginTop: 14, fontSize: "clamp(15px, 4vw, 22px)", letterSpacing: "0.15em", color: colors.primary, fontFamily: restaurant.font_display ?? "Georgia, serif", fontWeight: 400 }}>{restaurant.name}</h1>
-            <div style={{ width: 40, height: 1, background: `${colors.primary}30`, margin: "14px auto" }} />
-            {restaurant.tagline && <p style={{ fontSize: 11, letterSpacing: "0.1em", color: `${colors.primary}42`, fontFamily: "sans-serif" }}>{restaurant.tagline}</p>}
-            {restaurant.address && <p style={{ fontSize: 11, color: `${colors.primary}38`, fontFamily: "sans-serif", marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><MapPin size={11} /> {restaurant.address}</p>}
-          </header>
+          {/* ── HERO HEADER ── */}
+          <HeroHeader restaurant={restaurant} colors={colors} />
 
           {/* ── NAV CATÉGORIES ── */}
-         <nav
-  style={{
-    position: "sticky",
-    top: 0,
-    zIndex: 20,
-    padding: "10px 12px",
-    overflowX: "auto",
-    display: "flex",
-    gap: 10,
-    scrollbarWidth: "none",
-    background: `${colors.bg}cc`,
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    borderBottom: `1px solid ${colors.primary}12`,
-  }}
->
-  {([{ id: "all", name: "Tout" } as Pick<Category, "id" | "name" | "icon">, ...activeCats]).map((cat) => {
-    const isActive = activeCategory === cat.id;
-
-    return (
-      <button
-        key={cat.id}
-        onClick={() => setActive(cat.id)}
-        style={{
-          position: "relative",
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          padding: "7px 14px",
-          borderRadius: 999,
-          fontSize: 12,
-          fontWeight: isActive ? 700 : 500,
-          background: isActive
-            ? `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`
-            : "rgba(255,255,255,0.06)",
-          color: isActive ? "#fff" : `${colors.primary}80`,
-          border: isActive
-            ? "none"
-            : `1px solid ${colors.primary}18`,
-          cursor: "pointer",
-          whiteSpace: "nowrap",
-          transition: "all 0.25s ease",
-          boxShadow: isActive
-            ? "0 4px 14px rgba(0,0,0,0.2)"
-            : "none",
-        }}
-        onMouseEnter={(e) => {
-          if (!isActive) {
-            e.currentTarget.style.background = "rgba(255,255,255,0.12)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isActive) {
-            e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-          }
-        }}
-      >
-        {cat.icon && <span style={{ fontSize: 14 }}>{cat.icon}</span>}
-        {cat.name}
-
-        {/* petit indicateur actif */}
-        {isActive && (
-          <span
-            style={{
-              position: "absolute",
-              bottom: -6,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 18,
-              height: 3,
-              borderRadius: 10,
-              background: colors.accent,
+          <CategoryNav
+            colors={colors}
+            activeCats={activeCats}
+            activeCategory={activeCategory}
+            setActive={(id) => {
+              setActive(id);
+              setSearchQuery(""); // reset recherche au changement de catégorie
             }}
           />
-        )}
-      </button>
-    );
-  })}
-</nav>
+
+          {/* ── BARRE DE RECHERCHE (sticky sous la nav) ── */}
+          <SearchBar
+            colors={colors}
+            value={searchQuery}
+            onChange={setSearchQuery}
+          />
 
           {/* ── MENU ── */}
-          <main style={{ paddingBottom: 32, paddingTop: 8 }}>
-            {filteredCats.map(cat => {
-              const catItems = itemsByCategory[cat.id] ?? [];
-              const startIdx = globalIdx;
-              globalIdx += catItems.length;
-              return <CategorySection key={cat.id} category={cat} items={catItems} colors={colors} globalIndex={startIdx} onOpen={openModal} />;
-            })}
+          <main style={{ paddingBottom: 32, paddingTop: 8, overflow: "visible" }}>
+            <AnimatePresence mode="wait">
+              {displayCats.length === 0 && searchNorm ? (
+                <motion.div
+                  key="no-results"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  style={{ textAlign: "center", padding: "60px 24px" }}
+                >
+                  <p style={{ fontSize: 36, marginBottom: 12 }}>🍽️</p>
+                  <p style={{ color: `${colors.primary}50`, fontFamily: "sans-serif", fontSize: 13 }}>
+                    Aucun plat trouvé pour « {searchQuery} »
+                  </p>
+                </motion.div>
+              ) : (
+                displayCats.map(cat => {
+                  const catItems = filteredItemsByCategory[cat.id] ?? [];
+                  const startIdx = globalIdx;
+                  globalIdx += catItems.length;
+                  return (
+                    <CategorySection
+                      key={cat.id + searchQuery}
+                      category={cat}
+                      items={catItems}
+                      colors={colors}
+                      globalIndex={startIdx}
+                      onOpen={openModal}
+                    />
+                  );
+                })
+              )}
+            </AnimatePresence>
           </main>
 
           {/* ── RÉSEAUX SOCIAUX ── */}
           {socials.length > 0 && (
-            <section style={{ margin: "0 16px 24px", padding: "28px 20px", background: "rgba(0,0,0,0.22)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderRadius: 20, border: `1px solid ${colors.primary}10` }}>
-              <p style={{ fontSize: 10, letterSpacing: 3, textAlign: "center", color: `${colors.primary}38`, textTransform: "uppercase", fontFamily: "sans-serif", marginBottom: 20 }}>Retrouvez-nous sur</p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
-                {socials.map(({ key, label, Icon, bg, href }) => (
-                  <a key={key} href={href} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: `1px solid ${colors.primary}12`, textDecoration: "none" }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 9, background: bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}><Icon size={17} color="#fff" /></div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: colors.primary }}>{label}</p>
-                      {key !== "phone" && <p style={{ fontSize: 10, color: `${colors.primary}38`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{href}</p>}
-                    </div>
-                    <ChevronRight size={15} style={{ color: `${colors.primary}28`, flexShrink: 0 }} />
-                  </a>
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.5 }}
+              style={{
+                margin: "0 16px 24px",
+                padding: "28px 20px",
+                background: "rgba(0,0,0,0.22)",
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
+                borderRadius: 24,
+                border: `1px solid ${colors.primary}10`,
+              }}
+            >
+              <motion.p
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                style={{
+                  fontSize: 10,
+                  letterSpacing: "0.3em",
+                  textAlign: "center",
+                  color: `${colors.primary}40`,
+                  textTransform: "uppercase",
+                  fontFamily: "sans-serif",
+                  marginBottom: 20,
+                }}
+              >
+                Retrouvez-nous
+              </motion.p>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+                  gap: 10,
+                }}
+              >
+                {socials.map((social, i) => (
+                  <SocialCard key={social.key} social={social} index={i} />
                 ))}
               </div>
-            </section>
+            </motion.section>
           )}
 
           {/* ── FOOTER ── */}
           <footer style={{ textAlign: "center", padding: "24px 16px", borderTop: `1px solid ${colors.primary}08` }}>
-            <p style={{ fontSize: 10, letterSpacing: "0.2em", color: `${colors.primary}22`, fontFamily: "sans-serif", textTransform: "uppercase" }}>{restaurant.name} · Menu numérique</p>
-            <p style={{ fontSize: 9, marginTop: 4, color: `${colors.primary}14`, fontFamily: "sans-serif" }}>Propulsé par MenuQR</p>
+            <p style={{ fontSize: 10, letterSpacing: "0.2em", color: `${colors.primary}22`, fontFamily: "sans-serif", textTransform: "uppercase" }}>
+              {restaurant.name} · Menu numérique
+            </p>
+            <p style={{ fontSize: 9, marginTop: 4, color: `${colors.primary}14`, fontFamily: "sans-serif" }}>
+              Propulsé par MenuQR
+            </p>
           </footer>
 
         </div>
