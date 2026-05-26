@@ -106,7 +106,7 @@ function FloatingImage({
         height: CIRCLE_SIZE,
         borderRadius: "50%",
         overflow: "hidden",
-        border: `3px solid rgba(255,255,255,0.12)`,
+        border: `3px solid ${colors.accent}`,
         boxShadow: `0 14px 40px rgba(0,0,0,0.5), 0 0 0 6px ${colors.card}`,
         zIndex: 2,
         cursor: "pointer",
@@ -174,6 +174,7 @@ export default function ItemCard({ item, colors, index, onOpen }: ItemCardProps)
         if (e.key === "Enter" || e.key === " ") onOpen(item);
       }}
       style={{
+        width: 148,        // ← ajouter cette ligne
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -181,7 +182,7 @@ export default function ItemCard({ item, colors, index, onOpen }: ItemCardProps)
         paddingTop: OVERHANG,
         marginTop: OVERHANG,
         background: `${colors.card}e0`,
-        border: `1px solid ${colors.primary}14`,
+        border: `3px solid ${colors.primary}`,
         borderRadius: 20,
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
@@ -231,6 +232,7 @@ export default function ItemCard({ item, colors, index, onOpen }: ItemCardProps)
           padding: `${CIRCLE_SIZE / 2 - OVERHANG + 14}px 14px 16px`,
           width: "100%",
           textAlign: "center",
+          
         }}
       >
         <DishBadge item={item} />
@@ -253,7 +255,7 @@ export default function ItemCard({ item, colors, index, onOpen }: ItemCardProps)
             style={{
               fontSize: 10,
               lineHeight: 1.5,
-              color: `${colors.primary}50`,
+              color: `${colors.accent}`,
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",

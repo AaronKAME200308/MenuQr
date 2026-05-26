@@ -9,6 +9,8 @@ import { useState, useEffect } from "react";
 import type { RestaurantConfig, PartialRestaurantConfig } from "../components/types";
 import defaultConfig from "../restaurants/default";
 
+
+
 // ── Merge profond section par section ─────────────────────────
 
 function mergeConfig(
@@ -18,10 +20,29 @@ function mergeConfig(
   return {
     slug: override.slug,
     background: { ...base.background, ...override.background },
-    header:     { ...base.header,     ...override.header     },
-    card:       { ...base.card,       ...override.card       },
-    modal:      { ...base.modal,      ...override.modal      },
-    socials:    { ...base.socials,    ...override.socials    },
+    header: {
+      ...base.header,
+      ...override.header,
+      // Merge profond des sous-objets du header
+      background: { ...base.header.background, ...override.header?.background },
+      logo:       { ...base.header.logo,       ...override.header?.logo       },
+      title:      { ...base.header.title,      ...override.header?.title      },
+      subtitle:   { ...base.header.subtitle,   ...override.header?.subtitle   },
+      divider:    { ...base.header.divider,    ...override.header?.divider    },
+      tagline:    { ...base.header.tagline,    ...override.header?.tagline    },
+      footer:     { ...base.header.footer,     ...override.header?.footer     },
+    },
+    card:    { ...base.card,    ...override.card    },
+    modal:   { ...base.modal,   ...override.modal   },
+    socials: { ...base.socials, ...override.socials },
+    i18n: override.i18n
+  ? {
+      defaultLanguage:    override.i18n.defaultLanguage    ?? base.i18n?.defaultLanguage ?? "fr",
+      supportedLanguages: override.i18n.supportedLanguages ?? base.i18n?.supportedLanguages,
+      heroTitleLines:     override.i18n.heroTitleLines     ?? base.i18n?.heroTitleLines,
+      socialsLabel:       override.i18n.socialsLabel       ?? base.i18n?.socialsLabel,
+    }
+  : base.i18n,
   };
 }
 

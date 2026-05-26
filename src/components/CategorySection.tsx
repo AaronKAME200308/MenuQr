@@ -85,8 +85,9 @@ export default function CategorySection({
       <div
         style={{
           padding: "48px 16px 8px",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))",
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
           gap: 14,
           overflow: "visible",
         }}

@@ -1,4 +1,4 @@
-// types.ts
+// types.ts — v6 (i18n complet : name + tagline + address + hero)
 
 // ─────────────────────────────────────────────────────────────
 // Primitives
@@ -23,6 +23,22 @@ export interface Colors {
 }
 
 // ─────────────────────────────────────────────────────────────
+// i18n
+// ─────────────────────────────────────────────────────────────
+
+export type SupportedLang = "fr" | "en" | "de" | "ar" | string;
+
+export interface LangMeta {
+  code:  SupportedLang;
+  label: string;
+  flag:  string;
+  dir?:  "ltr" | "rtl";
+}
+
+export type UITranslations   = Record<string, string>;
+export type UITranslationMap = Record<SupportedLang, UITranslations>;
+
+// ─────────────────────────────────────────────────────────────
 // Supabase rows
 // ─────────────────────────────────────────────────────────────
 
@@ -45,6 +61,9 @@ export interface MenuItem {
   created_at: string;
   ingredients?: Ingredient[];
   variants?: Variant[];
+  // i18n
+  name_translations?:        Record<SupportedLang, string>;
+  description_translations?: Record<SupportedLang, string>;
 }
 
 export interface Category {
@@ -54,6 +73,8 @@ export interface Category {
   icon?: string;
   sort_order: number;
   created_at: string;
+  // i18n
+  name_translations?: Record<SupportedLang, string>;
 }
 
 export interface Restaurant {
@@ -77,17 +98,21 @@ export interface Restaurant {
   phone?: string;
   address?: string;
   created_at: string;
+  currency?: string;
+  // i18n
+  supported_languages?:   SupportedLang[];
+  default_language?:      SupportedLang;
+  name_translations?:     Record<SupportedLang, string>;   // ← nouveau
+  tagline_translations?:  Record<SupportedLang, string>;
+  address_translations?:  Record<SupportedLang, string>;
 }
 
 // ─────────────────────────────────────────────────────────────
-// RestaurantConfig — personnalisation par restaurant
+// RestaurantConfig — Hero
 // ─────────────────────────────────────────────────────────────
 
-/** FOND DE PAGE */
 export interface BackgroundConfig {
-  /** Pattern SVG haut : "diamonds" | "grid" | "dots" | "none" */
   patternTop: "diamonds" | "grid" | "dots" | "none";
-  /** Pattern SVG bas */
   patternBottom: "diamonds" | "grid" | "dots" | "none";
   patternTopOpacity: number;
   patternBottomOpacity: number;
@@ -95,74 +120,180 @@ export interface BackgroundConfig {
   blobBottomRight: boolean;
 }
 
-/** HEADER / HERO */
-export interface HeaderConfig {
-  /** Afficher le grand "ME\nNU" éditorial */
-  showBigMenu: boolean;
-  /** Texte alternatif si showBigMenu = false */
-  heroTitle?: string;
-  /** Texture sur l'arc coloré */
-  arcTexture: "dots" | "none";
-  /** Forme du bas de l'arc */
-  arcShape: "round" | "straight";
-  /** Anneau pulsant autour du logo */
-  logoPulse: boolean;
-  /** Séparateur animé sous le nom */
-  showDivider: boolean;
-  /** Parallax au scroll */
-  parallax: boolean;
+export interface HeroBackground {
+  color: string;
+  type: "solid" | "gradient" | "image";
+  gradient?: { angle?: number; stops: { color: string; pos: number }[] };
+  imageUrl?: string;
+  imageOverlay?: string;
+  pattern?: "dots" | "lines" | "diamonds" | "none";
+  patternColor?: string;
+  patternOpacity?: number;
+  shape?: "arc" | "diagonal" | "wave" | "full" | "none";
+  shapeColor?: string;
+  shapeCoverage?: number;
 }
 
-/** CARTES (ItemCard + CategorySection) */
+export interface HeroLogo {
+  show: boolean;
+  size?: number;
+  shape?: "circle" | "square" | "none";
+  borderColor?: string;
+  background?: string;
+  pulse?: boolean;
+  pulseColor?: string;
+  position?: "top-center" | "top-left" | "inline-left";
+  src?: string;
+  fallbackEmoji?: string;
+}
+
+export interface HeroTitle {
+  show: boolean;
+  mode?: "big-editorial" | "restaurant-name" | "custom" | "stacked";
+  customText?: string;
+  /** Fallback statique quand i18n.heroTitleLines est absent */
+  stackedLines?: string[];
+  fontSize?: string;
+  fontFamily?: string;
+  fontWeight?: number | string;
+  color?: string;
+  letterSpacing?: string;
+  lineHeight?: number;
+  textShadow?: string;
+  uppercase?: boolean;
+  align?: "left" | "center" | "right";
+}
+
+export interface HeroSubtitle {
+  show: boolean;
+  /** Override statique. Si absent : utilise le name traduit depuis la BD. */
+  text?: string;
+  fontSize?: string;
+  fontFamily?: string;
+  color?: string;
+  letterSpacing?: string;
+  fontStyle?: "normal" | "italic";
+}
+
+export interface HeroDivider {
+  show: boolean;
+  style?: "line" | "dots" | "ornament" | "wave";
+  color?: string;
+  width?: number;
+  thickness?: number;
+  ornamentChar?: string;
+}
+
+export interface HeroTagline {
+  show: boolean;
+  /** Override statique. Si absent : utilise tagline traduit depuis la BD. */
+  text?: string;
+  fontSize?: string;
+  color?: string;
+  letterSpacing?: string;
+  fontFamily?: string;
+  fontStyle?: "normal" | "italic";
+}
+
+export interface HeroFooterBand {
+  show: boolean;
+  background?: string;
+  paddingY?: number;
+  showAddress?: boolean;
+  addressColor?: string;
+  addressIcon?: boolean;
+  showBadge?: boolean;
+  /** Texte statique fallback */
+  badgeText?: string;
+  /**
+   * Traductions du badge par langue — prioritaire sur badgeText.
+   * { fr: "Ouvert maintenant", en: "Open now", de: "Jetzt geöffnet" }
+   */
+  badgeTextTranslations?: Record<SupportedLang, string>;
+  badgeBackground?: string;
+  badgeColor?: string;
+}
+
+export interface HeaderConfig {
+  layout?: "vertical" | "banner";
+  minHeight?: string;
+  paddingX?: string;
+  align?: "left" | "center" | "right";
+  parallax?: boolean;
+  background: HeroBackground;
+  logo: HeroLogo;
+  title: HeroTitle;
+  subtitle: HeroSubtitle;
+  divider: HeroDivider;
+  tagline: HeroTagline;
+  footer: HeroFooterBand;
+  showBigMenu?: boolean;
+}
+
+// ─────────────────────────────────────────────────────────────
+// RestaurantConfig — reste
+// ─────────────────────────────────────────────────────────────
+
 export interface CardConfig {
-  /** Disposition des cartes dans la grille */
   layout: "grid" | "list";
-  /** Largeur minimale des colonnes (grille) */
   gridMinWidth: number;
-  /** Rayon des coins */
   borderRadius: number;
-  /** Image circulaire flottante en haut de la carte */
   showFloatingImage: boolean;
-  /** Animation lévitation de l'image */
   imageFloat: boolean;
-  /** Numéro de l'item */
   showIndex: boolean;
-  /** Badges bestseller / populaire / nouveau */
   showBadges: boolean;
-  /** Description courte */
   showDescription: boolean;
-  /** Icônes végétarien / épicé */
   showDietIcons: boolean;
 }
 
-/** MODAL (ItemModal) */
 export interface ModalConfig {
-  /** Emojis décoratifs [gauche, droite] dans le header */
   heroEmojis: [string, string];
-  /** Texture feuilles SVG dans le header */
   showHeroTexture: boolean;
-  /** Forme du bas du header coloré */
   heroShape: "blob" | "straight";
-  /** Labels texte */
   labelIngredients: string;
   labelDescription: string;
   labelVariants: string;
-  /** Sections visibles */
   showIngredients: boolean;
   showVariants: boolean;
 }
 
-/** SOCIALS */
 export interface SocialsConfig {
-  /** Texte affiché entre les deux lignes séparatrices */
   sectionLabel: string;
-  /** Disposition */
   layout: "grid" | "row";
-  /** Largeur min colonnes */
   gridMinWidth: number;
 }
 
-/** Config complète — seul slug est requis, tout merge avec default */
+// ─────────────────────────────────────────────────────────────
+// I18nConfig
+// ─────────────────────────────────────────────────────────────
+
+export interface I18nConfig {
+  /** Langue par défaut (override de restaurant.default_language) */
+  defaultLanguage: SupportedLang;
+  /** Langues du sélecteur (override de restaurant.supported_languages) */
+  supportedLanguages?: SupportedLang[];
+
+  /**
+   * Traductions des lignes du titre hero (mode "stacked").
+   * {
+   *   fr: ["Street Food", "Camerounaise"],
+   *   en: ["Cameroonian", "Street Food"],
+   *   de: ["Kamerunisches", "Streetfood"],
+   * }
+   */
+  heroTitleLines?: Record<SupportedLang, string[]>;
+
+  /**
+   * Traductions du label section socials.
+   * { fr: "🌍 Rejoins la communauté", en: "🌍 Join us", de: "🌍 Mach mit" }
+   */
+  socialsLabel?: Record<SupportedLang, string>;
+}
+
+// ─────────────────────────────────────────────────────────────
+// RestaurantConfig complète
+// ─────────────────────────────────────────────────────────────
+
 export interface RestaurantConfig {
   slug: string;
   background: BackgroundConfig;
@@ -170,9 +301,9 @@ export interface RestaurantConfig {
   card: CardConfig;
   modal: ModalConfig;
   socials: SocialsConfig;
+  i18n?: I18nConfig;
 }
 
-/** Version partielle pour les overrides par resto */
 export type PartialRestaurantConfig = {
   slug: string;
   background?: Partial<BackgroundConfig>;
@@ -180,4 +311,5 @@ export type PartialRestaurantConfig = {
   card?: Partial<CardConfig>;
   modal?: Partial<ModalConfig>;
   socials?: Partial<SocialsConfig>;
+  i18n?: Partial<I18nConfig>;
 };
