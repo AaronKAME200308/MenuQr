@@ -1,17 +1,29 @@
-// hooks/useFilteredMenu.ts
+// hooks/useFilteredMenu.ts — v2 (typages stricts)
 // Calcule les items filtrés par catégorie et par recherche.
-// Retourne { itemsByCategory, activeCats, filteredCats, filteredByCategory, totalResults }.
 
 import { useMemo } from "react";
 import type { Category, MenuItem } from "../components/types";
 
-type UseFilteredMenuResult = {
+// ─────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────
+
+export interface UseFilteredMenuResult {
+  /** Tous les items groupés par category_id (avant filtre recherche) */
   itemsByCategory:    Record<string, MenuItem[]>;
+  /** Catégories ayant au moins 1 item disponible */
   activeCats:         Category[];
+  /** Items filtrés par recherche, groupés par category_id */
   filteredByCategory: Record<string, MenuItem[]>;
+  /** Catégories visibles (filtre nav + filtre recherche) */
   filteredCats:       Category[];
+  /** Nombre total d'items visibles */
   totalResults:       number;
-};
+}
+
+// ─────────────────────────────────────────────────────────────
+// Hook
+// ─────────────────────────────────────────────────────────────
 
 export function useFilteredMenu(
   categories:     Category[],
@@ -20,41 +32,51 @@ export function useFilteredMenu(
   activeCategory: string,
 ): UseFilteredMenuResult {
 
-  const itemsByCategory = useMemo(() =>
+  // Tous les items groupés par catégorie
+  const itemsByCategory = useMemo<Record<string, MenuItem[]>>(() =>
     categories.reduce<Record<string, MenuItem[]>>((acc, cat) => {
       acc[cat.id] = items.filter(i => i.category_id === cat.id);
       return acc;
     }, {}),
   [categories, items]);
 
-  const activeCats = useMemo(() =>
-    categories.filter(c => (itemsByCategory[c.id] ?? []).length > 0),
+  // Catégories avec au moins 1 item
+  const activeCats = useMemo<Category[]>(() =>
+    categories.filter(c => (itemsByCategory[c.id]?.length ?? 0) > 0),
   [categories, itemsByCategory]);
 
-  const searchedItems = useMemo(() => {
-    if (!searchQuery.trim()) return items;
-    const q = searchQuery.toLowerCase().trim();
+  // Items correspondant à la recherche
+  const searchedItems = useMemo<MenuItem[]>(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return items;
     return items.filter(item =>
       item.name.toLowerCase().includes(q) ||
-      item.description?.toLowerCase().includes(q)
+      (item.description?.toLowerCase().includes(q) ?? false),
     );
   }, [items, searchQuery]);
 
-  const filteredByCategory = useMemo(() =>
+  // Items filtrés groupés par catégorie
+  const filteredByCategory = useMemo<Record<string, MenuItem[]>>(() =>
     categories.reduce<Record<string, MenuItem[]>>((acc, cat) => {
       acc[cat.id] = searchedItems.filter(i => i.category_id === cat.id);
       return acc;
     }, {}),
   [categories, searchedItems]);
 
-  const filteredCats = useMemo(() => {
-    const cats = activeCats.filter(c => (filteredByCategory[c.id] ?? []).length > 0);
-    if (searchQuery.trim()) return cats;
-    return activeCategory === "all" ? cats : cats.filter(c => c.id === activeCategory);
+  // Catégories visibles selon filtre recherche + filtre nav
+  const filteredCats = useMemo<Category[]>(() => {
+    const withItems = activeCats.filter(
+      c => (filteredByCategory[c.id]?.length ?? 0) > 0,
+    );
+    if (searchQuery.trim()) return withItems;
+    return activeCategory === "all"
+      ? withItems
+      : withItems.filter(c => c.id === activeCategory);
   }, [activeCats, filteredByCategory, searchQuery, activeCategory]);
 
-  const totalResults = useMemo(() =>
-    filteredCats.reduce((n, c) => n + (filteredByCategory[c.id] ?? []).length, 0),
+  // Total des résultats visibles
+  const totalResults = useMemo<number>(() =>
+    filteredCats.reduce((n, c) => n + (filteredByCategory[c.id]?.length ?? 0), 0),
   [filteredCats, filteredByCategory]);
 
   return { itemsByCategory, activeCats, filteredByCategory, filteredCats, totalResults };

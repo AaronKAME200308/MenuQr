@@ -1,4 +1,6 @@
-// DynamicHero.tsx — i18n prop added, translated values threaded through
+// DynamicHero.tsx — v3 (i18n complet)
+// Reçoit une prop i18n avec TOUS les textes déjà résolus par MenuPage.
+// Le composant reste pur : aucune logique de langue interne.
 
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -16,35 +18,35 @@ import type {
   SupportedLang,
 } from "./types";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Prop i18n — tous les textes traduits par le parent
+// ─────────────────────────────────────────────────────────────
 
-export interface HeroI18n {
-  lang:       SupportedLang;
-  titleLines: string[];   // stacked lines already translated
-  badgeText:  string;     // footer badge already translated
-  tagline:    string;     // tagline already translated
-  address:    string;     // address already translated
+export interface DynamicHeroI18n {
+  lang:        SupportedLang;
+  /** Lignes du titre stacked, déjà traduites */
+  titleLines:  string[];
+  /** Badge footer, déjà traduit */
+  badgeText:   string;
+  /** Tagline, déjà traduit depuis BD */
+  tagline:     string;
+  /** Adresse, déjà traduite depuis BD */
+  address:     string;
+  /** Nom du restaurant, déjà traduit depuis BD */
+  restaurantName: string;
 }
 
-type Props = {
-  restaurant: Restaurant;
-  config:     RestaurantConfig;
-  i18n:       HeroI18n;
-};
-
-// ─── Helpers fond ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Helpers fond
+// ─────────────────────────────────────────────────────────────
 
 function buildBackground(bg: HeroBackground): React.CSSProperties {
   if (bg.type === "gradient" && bg.gradient) {
-    const stops = bg.gradient.stops.map((s) => `${s.color} ${s.pos}%`).join(", ");
+    const stops = bg.gradient.stops.map(s => `${s.color} ${s.pos}%`).join(", ");
     return { background: `linear-gradient(${bg.gradient.angle ?? 160}deg, ${stops})` };
   }
   if (bg.type === "image" && bg.imageUrl) {
-    return {
-      backgroundImage: `url(${bg.imageUrl})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-    };
+    return { backgroundImage: `url(${bg.imageUrl})`, backgroundSize: "cover", backgroundPosition: "center" };
   }
   return { background: bg.color ?? "#fff" };
 }
@@ -100,7 +102,9 @@ function PatternLayer({ bg, clip }: { bg: HeroBackground; clip?: boolean }) {
   return null;
 }
 
-// ─── Blocs de contenu ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Blocs de contenu
+// ─────────────────────────────────────────────────────────────
 
 function LogoBlock({ z, restaurant }: { z: HeroLogo; restaurant: Restaurant }) {
   if (!z.show) return null;
@@ -108,7 +112,7 @@ function LogoBlock({ z, restaurant }: { z: HeroLogo; restaurant: Restaurant }) {
   const src  = z.src ?? restaurant.logo_url;
   const shapeStyle: React.CSSProperties =
     z.shape === "circle" ? { borderRadius: "50%" } :
-    z.shape === "square" ? { borderRadius: 12 } : {};
+    z.shape === "square" ? { borderRadius: 12 }    : {};
   return (
     <div style={{ position: "relative", width: size, height: size }}>
       {z.pulse && (
@@ -129,11 +133,17 @@ function LogoBlock({ z, restaurant }: { z: HeroLogo; restaurant: Restaurant }) {
   );
 }
 
-// i18n: receives pre-translated stackedLines via i18n prop
+// TitleBlock reçoit les lignes déjà traduites via i18n.titleLines
 function TitleBlock({
-  z, restaurant, i18n,
+  z,
+  restaurant,
+  resolvedLines,
+  resolvedRestaurantName,
 }: {
-  z: HeroTitle; restaurant: Restaurant; i18n: HeroI18n;
+  z:                     HeroTitle;
+  restaurant:            Restaurant;
+  resolvedLines:         string[];
+  resolvedRestaurantName: string;
 }) {
   if (!z.show) return null;
   const style: React.CSSProperties = {
@@ -149,16 +159,25 @@ function TitleBlock({
     margin: 0,
   };
 
-  // "stacked" uses translated lines from i18n; fallback to z.stackedLines
-  const lines = z.mode === "stacked"
-    ? (i18n.titleLines.length > 0 ? i18n.titleLines : (z.stackedLines ?? []))
-    : null;
-
-  const content =
-    z.mode === "big-editorial" ? <><span>ME</span><br /><span>NU</span></> :
-    z.mode === "custom"        ? <>{z.customText}</> :
-    z.mode === "stacked"       ? <>{lines!.map((l, i) => <span key={i}>{l}<br /></span>)}</> :
-    <>{restaurant.name}</>;
+  let content: React.ReactNode;
+  switch (z.mode) {
+    case "big-editorial":
+      content = <><span>ME</span><br /><span>NU</span></>;
+      break;
+    case "custom":
+      content = <>{z.customText}</>;
+      break;
+    case "stacked": {
+      // Lignes traduites en priorité, fallback sur stackedLines statiques
+      const lines = resolvedLines.length > 0 ? resolvedLines : (z.stackedLines ?? []);
+      content = <>{lines.map((l, i) => <span key={i}>{l}<br /></span>)}</>;
+      break;
+    }
+    case "restaurant-name":
+    default:
+      // Utilise le nom traduit depuis la BD
+      content = <>{resolvedRestaurantName}</>;
+  }
 
   return (
     <motion.div
@@ -172,25 +191,31 @@ function TitleBlock({
   );
 }
 
-// i18n: subtitle uses restaurant.name which is already translated upstream in MenuPage
-function SubtitleBlock({ z, restaurant }: { z: HeroSubtitle; restaurant: Restaurant }) {
+// SubtitleBlock — affiche le nom traduit si z.text est absent
+function SubtitleBlock({
+  z,
+  resolvedRestaurantName,
+}: {
+  z:                     HeroSubtitle;
+  resolvedRestaurantName: string;
+}) {
   if (!z.show) return null;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.22, duration: 0.45 }}
       style={{
         fontSize:      z.fontSize      ?? "clamp(14px,4vw,20px)",
-        fontFamily:    z.fontFamily    ?? restaurant.font_display ?? "serif",
+        fontFamily:    z.fontFamily    ?? "serif",
         color:         z.color         ?? "rgba(255,255,255,0.9)",
         letterSpacing: z.letterSpacing ?? "0.15em",
         fontStyle:     z.fontStyle     ?? "normal",
         marginTop: 8,
       }}
     >
-      {/* z.text is a static override; otherwise fall back to the
-          (already-translated) restaurant.name passed from MenuPage */}
-      {z.text ?? restaurant.name}
+      {/* Override statique prioritaire, sinon nom traduit depuis BD */}
+      {z.text ?? resolvedRestaurantName}
     </motion.div>
   );
 }
@@ -206,9 +231,7 @@ function DividerBlock({ z }: { z: HeroDivider }) {
   if (z.style === "dots") return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
       style={{ margin: "12px 0", display: "flex", gap: 6 }}>
-      {[0, 1, 2].map(i => (
-        <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: z.color ?? "rgba(255,255,255,0.4)" }} />
-      ))}
+      {[0, 1, 2].map(i => <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: z.color ?? "rgba(255,255,255,0.4)" }} />)}
     </motion.div>
   );
   return (
@@ -217,18 +240,23 @@ function DividerBlock({ z }: { z: HeroDivider }) {
   );
 }
 
-// i18n: uses pre-translated tagline from i18n prop; z.text is still a static override
+// TaglineBlock — affiche le tagline traduit depuis BD (ou override statique)
 function TaglineBlock({
-  z, i18n,
+  z,
+  resolvedTagline,
 }: {
-  z: HeroTagline; i18n: HeroI18n;
+  z:               HeroTagline;
+  resolvedTagline: string;
 }) {
   if (!z.show) return null;
-  const text = z.text ?? i18n.tagline;
+  // z.text = override statique dans la config resto (rare)
+  const text = z.text ?? resolvedTagline;
   if (!text) return null;
   return (
     <motion.p
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.35 }}
       style={{
         fontSize:      z.fontSize      ?? "11px",
         letterSpacing: z.letterSpacing ?? "0.12em",
@@ -243,65 +271,70 @@ function TaglineBlock({
   );
 }
 
-// i18n: uses pre-translated address + badgeText from i18n prop
+// FooterBand — address et badgeText déjà traduits par le parent
 function FooterBand({
-  z, i18n,
+  z,
+  resolvedAddress,
+  resolvedBadgeText,
 }: {
-  z: HeroFooterBand; i18n: HeroI18n;
+  z:                 HeroFooterBand;
+  resolvedAddress:   string;
+  resolvedBadgeText: string;
 }) {
   if (!z.show) return null;
-  const address   = i18n.address   || undefined;
-  const badgeText = i18n.badgeText || z.badgeText || undefined;
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.45 }}
       style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        background:    z.background ?? "transparent",
-        paddingTop:    z.paddingY   ?? 12,
-        paddingBottom: z.paddingY   ?? 12,
-        paddingLeft: 24, paddingRight: 24,
+        background:   z.background ?? "transparent",
+        paddingTop:   z.paddingY   ?? 12,
+        paddingBottom: z.paddingY  ?? 12,
+        paddingLeft:  24,
+        paddingRight: 24,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         gap: 8, zIndex: 3,
       }}
     >
-      {z.showAddress && address && (
+      {z.showAddress && resolvedAddress && (
         <p style={{ fontSize: 11, color: z.addressColor ?? "rgba(255,255,255,0.7)", margin: 0, display: "flex", alignItems: "center", gap: 4 }}>
-          {z.addressIcon && <MapPin size={10} />}
-          {address}
+          {z.addressIcon && <MapPin size={10} />}{resolvedAddress}
         </p>
       )}
-      {z.showBadge && badgeText && (
+      {z.showBadge && resolvedBadgeText && (
         <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", padding: "4px 10px", borderRadius: 20, background: z.badgeBackground ?? "#fff", color: z.badgeColor ?? "#000", whiteSpace: "nowrap" }}>
-          {badgeText}
+          {resolvedBadgeText}
         </span>
       )}
     </motion.div>
   );
 }
 
-// ─── Layout BANNER ────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Layouts
+// ─────────────────────────────────────────────────────────────
 
-function BannerLayout({
-  h, restaurant, i18n,
-}: {
-  h: RestaurantConfig["header"]; restaurant: Restaurant; i18n: HeroI18n;
-}) {
-  const px = h.paddingX ?? "32px";
+type LayoutProps = {
+  h:          RestaurantConfig["header"];
+  restaurant: Restaurant;
+  i18n:       DynamicHeroI18n;
+};
+
+function BannerLayout({ h, restaurant, i18n }: LayoutProps) {
   return (
-    <div style={{
-      position: "relative", zIndex: 2, flex: 1,
-      display: "grid", gridTemplateColumns: "1fr auto",
-      alignItems: "center", gap: 24,
-      padding: `0 ${px}`,
-    }}>
+    <div style={{ position: "relative", zIndex: 2, flex: 1, display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 24, padding: `0 ${h.paddingX ?? "32px"}` }}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0 }}>
-        <TitleBlock    z={h.title}    restaurant={restaurant} i18n={i18n} />
-        <SubtitleBlock z={h.subtitle} restaurant={restaurant} />
+        <TitleBlock
+          z={h.title}
+          restaurant={restaurant}
+          resolvedLines={i18n.titleLines}
+          resolvedRestaurantName={i18n.restaurantName}
+        />
+        <SubtitleBlock z={h.subtitle} resolvedRestaurantName={i18n.restaurantName} />
         <DividerBlock  z={h.divider} />
-        <TaglineBlock  z={h.tagline}  i18n={i18n} />
+        <TaglineBlock  z={h.tagline} resolvedTagline={i18n.tagline} />
       </div>
       {h.logo.show && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -312,13 +345,7 @@ function BannerLayout({
   );
 }
 
-// ─── Layout VERTICAL (défaut) ─────────────────────────────────────────────────
-
-function VerticalLayout({
-  h, restaurant, i18n,
-}: {
-  h: RestaurantConfig["header"]; restaurant: Restaurant; i18n: HeroI18n;
-}) {
+function VerticalLayout({ h, restaurant, i18n }: LayoutProps) {
   const isLeft = h.align === "left";
   return (
     <div style={{
@@ -330,16 +357,29 @@ function VerticalLayout({
       padding: `clamp(48px,10vw,80px) ${h.paddingX ?? "24px"} 80px`,
       gap: 0,
     }}>
-      <LogoBlock     z={h.logo}     restaurant={restaurant} />
-      <TitleBlock    z={h.title}    restaurant={restaurant} i18n={i18n} />
-      <SubtitleBlock z={h.subtitle} restaurant={restaurant} />
+      <LogoBlock z={h.logo} restaurant={restaurant} />
+      <TitleBlock
+        z={h.title}
+        restaurant={restaurant}
+        resolvedLines={i18n.titleLines}
+        resolvedRestaurantName={i18n.restaurantName}
+      />
+      <SubtitleBlock z={h.subtitle} resolvedRestaurantName={i18n.restaurantName} />
       <DividerBlock  z={h.divider} />
-      <TaglineBlock  z={h.tagline}  i18n={i18n} />
+      <TaglineBlock  z={h.tagline} resolvedTagline={i18n.tagline} />
     </div>
   );
 }
 
-// ─── Composant principal ──────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Composant principal
+// ─────────────────────────────────────────────────────────────
+
+type Props = {
+  restaurant: Restaurant;
+  config:     RestaurantConfig;
+  i18n:       DynamicHeroI18n;
+};
 
 export default function DynamicHero({ restaurant, config, i18n }: Props) {
   const { header: h } = config;
@@ -372,11 +412,15 @@ export default function DynamicHero({ restaurant, config, i18n }: Props) {
       )}
 
       {isBanner
-        ? <BannerLayout  h={h} restaurant={restaurant} i18n={i18n} />
+        ? <BannerLayout   h={h} restaurant={restaurant} i18n={i18n} />
         : <VerticalLayout h={h} restaurant={restaurant} i18n={i18n} />
       }
 
-      <FooterBand z={h.footer} i18n={i18n} />
+      <FooterBand
+        z={h.footer}
+        resolvedAddress={i18n.address}
+        resolvedBadgeText={i18n.badgeText}
+      />
 
       <style>{`
         @keyframes pulse-ring {

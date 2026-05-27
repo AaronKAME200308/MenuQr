@@ -1,12 +1,12 @@
-// src/restaurants/default.ts — v2
-// Config par défaut alignée sur HeaderConfig (types.ts v6).
+// restaurants/default.ts — v2 (i18n inclus)
+// Config par défaut complète. Tous les restos overrident partiellement celle-ci.
 
 import type { RestaurantConfig } from "../components/types";
 
 const defaultConfig: RestaurantConfig = {
   slug: "default",
 
-  // ── Fond de page ──────────────────────────────────────────
+  // ── Fond de page ────────────────────────────────────────────
   background: {
     patternTop:           "diamonds",
     patternBottom:        "grid",
@@ -16,7 +16,8 @@ const defaultConfig: RestaurantConfig = {
     blobBottomRight:      true,
   },
 
-  // ── Header / Hero ─────────────────────────────────────────
+  // ── Header / Hero ────────────────────────────────────────────
+  // Layout vertical centré, grand titre éditorial "ME\nNU"
   header: {
     layout:    "vertical",
     minHeight: "100svh",
@@ -25,67 +26,70 @@ const defaultConfig: RestaurantConfig = {
     parallax:  true,
 
     background: {
-      color:          "#0a2e20",
-      type:           "solid",
-      pattern:        "dots",
-      patternColor:   "#ffffff",
+      type:    "solid",
+      color:   "#0a2e20",
+      pattern: "dots",
+      patternColor:   "#F5E6C8",
       patternOpacity: 0.045,
-      shape:          "arc",
-      shapeColor:     "#0d3d28",
-      shapeCoverage:  72,
+      shape:   "none",
     },
 
     logo: {
-      show:        true,
-      size:        90,
-      shape:       "circle",
-      pulse:       true,
-      pulseColor:  "#F5E6C8",
-      borderColor: "rgba(245,230,200,0.25)",
+      show:          true,
+      size:          90,
+      shape:         "circle",
+      borderColor:   "#F5E6C840",
+      background:    "rgba(255,255,255,0.06)",
+      pulse:         true,
+      pulseColor:    "#F5E6C8",
+      position:      "top-center",
+      fallbackEmoji: "🍽️",
     },
 
     title: {
       show:          true,
-      mode:          "big-editorial",   // grand "ME\nNU"
-      fontSize:      "clamp(40px,12vw,80px)",
+      mode:          "big-editorial",
+      fontSize:      "clamp(80px, 22vw, 160px)",
+      fontFamily:    "Georgia, serif",
       fontWeight:    900,
       color:         "#F5E6C8",
-      letterSpacing: "-0.03em",
-      lineHeight:    1,
+      letterSpacing: "-0.04em",
+      lineHeight:    0.88,
+      textShadow:    "none",
       uppercase:     false,
       align:         "center",
     },
 
     subtitle: {
-      show:          false,   // restaurant.name déjà affiché via tagline
-      letterSpacing: "0.15em",
+      show:          true,
+      fontSize:      "clamp(12px, 3.5vw, 16px)",
+      fontFamily:    "sans-serif",
+      color:         "#F5E6C890",
+      letterSpacing: "0.3em",
+      fontStyle:     "normal",
     },
 
     divider: {
       show:      true,
-      style:     "line",
-      color:     "rgba(245,230,200,0.35)",
-      width:     48,
-      thickness: 2,
+      style:     "dots",
+      color:     "#F5E6C840",
     },
 
     tagline: {
       show:          true,
       fontSize:      "11px",
-      letterSpacing: "0.12em",
-      color:         "rgba(245,230,200,0.6)",
+      color:         "#F5E6C855",
+      letterSpacing: "0.15em",
       fontFamily:    "sans-serif",
+      fontStyle:     "italic",
     },
 
     footer: {
-      show:            true,
-      background:      "rgba(0,0,0,0.18)",
-      paddingY:        14,
-      showAddress:     true,
-      addressColor:    "rgba(245,230,200,0.65)",
+      show:            false,
+      showAddress:     false,
       addressIcon:     true,
-      showBadge:       true,
-      badgeText:       "Ouvert maintenant",
+      addressColor:    "rgba(245,230,200,0.7)",
+      showBadge:       false,
       badgeBackground: "#F5E6C8",
       badgeColor:      "#0a2e20",
     },
@@ -93,7 +97,7 @@ const defaultConfig: RestaurantConfig = {
     showBigMenu: true,
   },
 
-  // ── Cartes ────────────────────────────────────────────────
+  // ── Cartes ───────────────────────────────────────────────────
   card: {
     layout:            "grid",
     gridMinWidth:      148,
@@ -106,7 +110,7 @@ const defaultConfig: RestaurantConfig = {
     showDietIcons:     true,
   },
 
-  // ── Modal ─────────────────────────────────────────────────
+  // ── Modal ─────────────────────────────────────────────────────
   modal: {
     heroEmojis:       ["🥕", "🌿"],
     showHeroTexture:  true,
@@ -118,11 +122,19 @@ const defaultConfig: RestaurantConfig = {
     showVariants:     true,
   },
 
-  // ── Socials ───────────────────────────────────────────────
+  // ── Socials ───────────────────────────────────────────────────
   socials: {
     sectionLabel: "🤝 Rejoins-nous",
     layout:       "grid",
     gridMinWidth: 150,
+  },
+
+  // ── i18n par défaut ───────────────────────────────────────────
+  // Pas de heroTitleLines ici : le titre est en mode "big-editorial"
+  // et ne nécessite pas de traduction.
+  i18n: {
+    defaultLanguage:    "fr",
+    supportedLanguages: ["fr"],
   },
 };
 
