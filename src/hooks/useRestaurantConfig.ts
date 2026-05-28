@@ -23,7 +23,7 @@ function mergeConfig(
     modal:      { ...base.modal,      ...override.modal      },
     socials:    { ...base.socials,    ...override.socials    },
     // i18n merge : si le resto définit i18n, on merge avec undefined (pas de default)
-    i18n: override.i18n
+   i18n: override.i18n
   ? {
       defaultLanguage:    override.i18n.defaultLanguage    ?? base.i18n?.defaultLanguage ?? "fr",
       supportedLanguages: override.i18n.supportedLanguages ?? base.i18n?.supportedLanguages,

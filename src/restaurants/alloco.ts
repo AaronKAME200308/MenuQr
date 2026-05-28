@@ -1,7 +1,7 @@
-// alloco.ts — v2 (i18n complet)
-// Langue par défaut : fr. Langues disponibles : fr, en, de.
-// Les traductions BD (items/categories) sont dans alloco_translations_de.sql.
-// Les textes du hero et des socials sont ici dans i18n.
+// alloco.ts — v4
+// defaultLanguage = "de" : allemand par défaut pour Alloco.
+// supportedLanguages défini ici pour affichage immédiat du picker
+// (la BD arrive de manière asynchrone — trop tard pour le premier rendu).
 
 import type { PartialRestaurantConfig } from "../components/types";
 
@@ -18,7 +18,7 @@ const allocoConfig: PartialRestaurantConfig = {
   },
 
   header: {
-    layout:   "banner",
+    layout:    "banner",
     minHeight: "260px",
     paddingX:  "32px",
     parallax:  false,
@@ -46,8 +46,7 @@ const allocoConfig: PartialRestaurantConfig = {
     title: {
       show:          true,
       mode:          "stacked",
-      // Fallback statique (si i18n.heroTitleLines est absent)
-      stackedLines:  ["Street Food", "Camerounaise"],
+      stackedLines:  ["Street Food", "Camerounaise"], // fallback si pas de traduction
       fontSize:      "clamp(36px, 8vw, 64px)",
       fontFamily:    "'Bebas Neue', sans-serif",
       fontWeight:    400,
@@ -87,8 +86,6 @@ const allocoConfig: PartialRestaurantConfig = {
     footer: {
       show:      false,
       showBadge: true,
-      badgeText: "Ouvert maintenant",
-      // Traductions du badge footer (si footer.show passe à true un jour)
       badgeTextTranslations: {
         fr: "Ouvert maintenant",
         en: "Open now",
@@ -129,18 +126,22 @@ const allocoConfig: PartialRestaurantConfig = {
   },
 
   // ── i18n ────────────────────────────────────────────────────
+  // defaultLanguage et supportedLanguages DOIVENT être définis ici
+  // pour que le LanguagePicker s'affiche dès le premier rendu.
+  // Sans ça, le hook tombe sur le fallback ["fr"] du default.ts
+  // et le picker reste caché (1 seule langue détectée).
+  //
+  // La BD (restaurant.default_language / supported_languages) peut
+  // encore agir si userOverride = false, mais pour Alloco on fixe
+  // explicitement "de" comme langue d'ouverture.
   i18n: {
     defaultLanguage:    "de",
-    supportedLanguages: ["fr", "en", "de"],
-
-    // Lignes du titre hero traduites par langue
+    supportedLanguages: ["de", "fr", "en"],
     heroTitleLines: {
-      fr: ["Street Food", "Camerounaise"],
-      en: ["Cameroonian",  "Street Food"],
+      fr: ["Street Food",   "Camerounaise"],
+      en: ["Cameroonian",   "Street Food"],
       de: ["Kamerunisches", "Streetfood"],
     },
-
-    // Label de la section socials
     socialsLabel: {
       fr: "🌍 Rejoins la communauté Alloco",
       en: "🌍 Join the Alloco community",

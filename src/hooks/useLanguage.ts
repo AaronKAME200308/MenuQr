@@ -1,7 +1,9 @@
-// hooks/useLanguage.ts — v4
-// Fix : la langue par défaut issue de la BD (restaurant.default_language)
-// est appliquée via useEffect dès que restaurant est chargé,
-// car useState(initialValue) ne se re-exécute pas après le premier render.
+// hooks/useLanguage.ts — v5
+// Fix définitif langue BD :
+//   - useState initialisé à null (langue inconnue avant fetch)
+//   - useEffect applique restaurant.default_language dès qu'il arrive
+//   - lang affiché = lang ?? "fr" (jamais null vers les enfants)
+//   - userOverride empêche la BD de ré-écraser le choix manuel
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type {
@@ -25,7 +27,7 @@ export const LANG_META: Record<string, LangMeta> = {
 };
 
 // ─────────────────────────────────────────────────────────────
-// Chaînes UI par langue
+// Chaînes UI
 // ─────────────────────────────────────────────────────────────
 
 const UI_STRINGS: Record<string, UITranslations> = {
@@ -107,27 +109,40 @@ function getUIString(lang: SupportedLang, key: string): string {
   return UI_STRINGS[lang]?.[key] ?? UI_STRINGS["fr"]?.[key] ?? key;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Résolution d'un champ JSONB avec chaîne de fallback
-// ─────────────────────────────────────────────────────────────
-
 function resolveField(
   translations: Record<string, string> | undefined,
-  fallback:     string,
-  lang:         SupportedLang,
-  defaultLang:  SupportedLang,
+  fallback: string,
+  lang: SupportedLang,
+  // defaultLang: SupportedLang,
 ): string {
-  if (!translations) return fallback;
-  return (
-    translations[lang]        ??
-    translations[defaultLang] ??
-    translations["fr"]        ??
-    fallback
-  );
+
+  // Le français est toujours la valeur de base en BD
+  // donc on retourne directement fallback
+  if (lang === "fr") {
+    return fallback;
+  }
+
+  // Si pas de traductions → fallback
+  if (!translations) {
+    return fallback;
+  }
+
+  // Traduction demandée
+  const translated = translations[lang];
+
+  // Si absente → fallback FR
+  return translated ?? fallback;
+}
+
+
+function applyLangToDOM(lang: SupportedLang): void {
+  if (typeof document === "undefined") return;
+  document.documentElement.lang = lang;
+  document.documentElement.dir  = LANG_META[lang]?.dir ?? "ltr";
 }
 
 // ─────────────────────────────────────────────────────────────
-// Type de retour du hook
+// Type de retour
 // ─────────────────────────────────────────────────────────────
 
 export interface UseLanguageResult {
@@ -152,63 +167,67 @@ export function useLanguage(
   config?:    RestaurantConfig,
 ): UseLanguageResult {
 
-  // ── Priorité de la langue par défaut ──────────────────────────
-  // 1. config.i18n.defaultLanguage  (fichier resto .ts)  — statique, dispo dès le 1er render
-  // 2. restaurant.default_language  (Supabase)           — arrive après le fetch
-  // 3. "fr"                                              — fallback ultime
-  //
-  // On initialise avec ce qu'on a au 1er render (config ou "fr"),
-  // puis on synchronise dès que restaurant arrive via useEffect.
-  const configDefaultLang: SupportedLang =
-    config?.i18n?.defaultLanguage ?? "fr";
-
-  const [lang, setLangState] = useState<SupportedLang>(configDefaultLang);
-
-  // ── Marqueur : l'utilisateur a-t-il changé manuellement la langue ? ──
-  // Si oui, on ne réinitialise plus au chargement de restaurant.
+  // ── État interne ─────────────────────────────────────────────
+  // null = langue pas encore résolue (restaurant pas encore chargé).
+  // On n'expose jamais null vers l'extérieur (voir `resolvedLang` plus bas).
+  const [lang, setLangState]         = useState<SupportedLang | null>(null);
   const [userOverride, setUserOverride] = useState<boolean>(false);
 
-  // ── Synchronisation avec restaurant.default_language ─────────
-  // S'exécute une fois dès que restaurant est non-null.
-  // Ignoré si :
-  //   - config.i18n.defaultLanguage est défini (la config locale a priorité)
-  //   - l'utilisateur a déjà changé manuellement la langue
+  // ── Résolution de la langue initiale ─────────────────────────
+  // Ordre de priorité :
+  //   1. config.i18n.defaultLanguage  → statique, dispo dès le 1er render
+  //   2. restaurant.default_language  → dynamique, arrive après le fetch Supabase
+  //   3. "fr"                         → fallback ultime
+  //
+  // On écoute les deux sources séparément pour réagir dès que l'une change.
   useEffect(() => {
-    if (userOverride)                        return; // choix utilisateur prioritaire
-    if (config?.i18n?.defaultLanguage)       return; // config locale prioritaire
-    if (!restaurant?.default_language)       return; // pas encore chargé
+    if (userOverride) return; // l'utilisateur a choisi — on ne touche plus à rien
 
-    const dbLang = restaurant.default_language as SupportedLang;
-
-    // Ne rien faire si la langue est déjà la bonne
-    setLangState(prev => prev === dbLang ? prev : dbLang);
-
-    // Appliquer la direction RTL si nécessaire
-    if (typeof document !== "undefined") {
-      document.documentElement.dir  = LANG_META[dbLang]?.dir ?? "ltr";
-      document.documentElement.lang = dbLang;
+    // Source 1 : config locale (dispo immédiatement, pas de fetch)
+    if (config?.i18n?.defaultLanguage) {
+      const target = config.i18n.defaultLanguage;
+      setLangState(prev => (prev === target ? prev : target));
+      applyLangToDOM(target);
+      return;
     }
-  }, [restaurant?.default_language, config?.i18n?.defaultLanguage, userOverride]);
 
-  // ── Changement manuel de langue ───────────────────────────────
+    // Source 2 : BD Supabase (arrive après le fetch)
+    if (restaurant?.default_language) {
+      const target = restaurant.default_language as SupportedLang;
+      setLangState(prev => (prev === target ? prev : target));
+      applyLangToDOM(target);
+      return;
+    }
+
+    // Source 3 : fallback "fr" si rien d'autre n'est dispo
+    setLangState(prev => (prev === null ? "fr" : prev));
+  }, [
+    config?.i18n?.defaultLanguage,
+    restaurant?.default_language,
+    userOverride,
+  ]);
+
+  // ── Changement manuel ─────────────────────────────────────────
   const setLang = useCallback((l: SupportedLang): void => {
     setUserOverride(true);
     setLangState(l);
-    if (typeof document !== "undefined") {
-      document.documentElement.dir  = LANG_META[l]?.dir ?? "ltr";
-      document.documentElement.lang = l;
-    }
+    applyLangToDOM(l);
   }, []);
 
+  // ── Langue résolue (jamais null vers les enfants) ─────────────
+  // Pendant le bref instant avant que le useEffect ci-dessus tourne,
+  // on affiche "fr" pour éviter un flash de contenu vide.
+  const resolvedLang: SupportedLang = lang ?? "fr";
+
   // ── defaultLang pour les fallbacks tField ─────────────────────
-  // Priorité : config > BD > "fr"
   const defaultLang: SupportedLang = useMemo(() =>
     config?.i18n?.defaultLanguage ??
-    restaurant?.default_language  ??
+    (restaurant?.default_language as SupportedLang | undefined) ??
     "fr",
   [config?.i18n?.defaultLanguage, restaurant?.default_language]);
 
   // ── Langues disponibles ───────────────────────────────────────
+  // Ordre depuis la BD : reflect l'ordre voulu par le gérant du restaurant.
   const supportedCodes: SupportedLang[] = useMemo(() =>
     config?.i18n?.supportedLanguages ??
     restaurant?.supported_languages  ??
@@ -216,20 +235,18 @@ export function useLanguage(
   [config?.i18n?.supportedLanguages, restaurant?.supported_languages]);
 
   // ─────────────────────────────────────────────────────────────
-  // Helpers mémoïsés
+  // Helpers traduction
   // ─────────────────────────────────────────────────────────────
 
   const t = useCallback(
-    (key: string): string => getUIString(lang, key),
-    [lang],
+    (key: string): string => getUIString(resolvedLang, key),
+    [resolvedLang],
   );
 
   const tField = useCallback(
-    (
-      translations: Record<string, string> | undefined,
-      fallback:     string,
-    ): string => resolveField(translations, fallback, lang, defaultLang),
-    [lang, defaultLang],
+    (translations: Record<string, string> | undefined, fallback: string): string =>
+      resolveField(translations, fallback, resolvedLang),
+    [resolvedLang, defaultLang],
   );
 
   const tHeroLines = useCallback(
@@ -237,14 +254,14 @@ export function useLanguage(
       const map = cfg.i18n?.heroTitleLines;
       if (!map) return cfg.header.title.stackedLines ?? [];
       return (
-        map[lang]        ??
-        map[defaultLang] ??
-        map["fr"]        ??
+        map[resolvedLang]  ??
+        map[defaultLang]   ??
+        map["fr"]          ??
         cfg.header.title.stackedLines ??
         []
       );
     },
-    [lang, defaultLang],
+    [resolvedLang, defaultLang],
   );
 
   const tBadge = useCallback(
@@ -252,14 +269,14 @@ export function useLanguage(
       const map = footer.badgeTextTranslations;
       if (!map) return footer.badgeText ?? "";
       return (
-        map[lang]        ??
-        map[defaultLang] ??
-        map["fr"]        ??
-        footer.badgeText ??
+        map[resolvedLang] ??
+        map[defaultLang]  ??
+        map["fr"]         ??
+        footer.badgeText  ??
         ""
       );
     },
-    [lang, defaultLang],
+    [resolvedLang, defaultLang],
   );
 
   const tSocialsLabel = useCallback(
@@ -267,13 +284,13 @@ export function useLanguage(
       const map = cfg.i18n?.socialsLabel;
       if (!map) return cfg.socials.sectionLabel;
       return (
-        map[lang]        ??
-        map[defaultLang] ??
-        map["fr"]        ??
+        map[resolvedLang] ??
+        map[defaultLang]  ??
+        map["fr"]         ??
         cfg.socials.sectionLabel
       );
     },
-    [lang, defaultLang],
+    [resolvedLang, defaultLang],
   );
 
   // ─────────────────────────────────────────────────────────────
@@ -281,8 +298,8 @@ export function useLanguage(
   // ─────────────────────────────────────────────────────────────
 
   const langMeta = useMemo<LangMeta>(
-    () => LANG_META[lang] ?? { code: lang, label: lang, flag: "🌐", dir: "ltr" },
-    [lang],
+    () => LANG_META[resolvedLang] ?? { code: resolvedLang, label: resolvedLang, flag: "🌐", dir: "ltr" },
+    [resolvedLang],
   );
 
   const availableLangs = useMemo<LangMeta[]>(
@@ -292,10 +309,8 @@ export function useLanguage(
     [supportedCodes],
   );
 
-  const isRTL = langMeta.dir === "rtl";
-
   return {
-    lang,
+    lang:           resolvedLang,
     setLang,
     t,
     tField,
@@ -304,6 +319,6 @@ export function useLanguage(
     tSocialsLabel,
     langMeta,
     availableLangs,
-    isRTL,
+    isRTL:          langMeta.dir === "rtl",
   };
 }
