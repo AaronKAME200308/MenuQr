@@ -284,7 +284,7 @@ export default function MenuPage({ slug }: MenuPageProps) {
       />
 
       <div style={{ position: "relative", zIndex: 1, minHeight: "100vh", width: "100%", overflow: "visible" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", width: "100%" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", width: "100%" }}>
 
           {/* ── Hero ──────────────────────────────────────────── */}
           <DynamicHero

@@ -108,24 +108,48 @@ function PatternLayer({ bg, clip }: { bg: HeroBackground; clip?: boolean }) {
 
 function LogoBlock({ z, restaurant }: { z: HeroLogo; restaurant: Restaurant }) {
   if (!z.show) return null;
-  const size = z.size ?? 90;
+  const size = z.size ?? 50;
   const src  = z.src ?? restaurant.logo_url;
+  const pulseMargin = z.pulse ? 12 : 0; // ← espace pour l'anneau
   const shapeStyle: React.CSSProperties =
     z.shape === "circle" ? { borderRadius: "50%" } :
     z.shape === "square" ? { borderRadius: 12 }    : {};
+
   return (
-    <div style={{ position: "relative", width: size, height: size }}>
+    // Wrapper agrandi pour ne pas couper le pulse-ring
+    <div style={{
+      position: "relative",
+      width:  size + pulseMargin * 2,
+      height: size + pulseMargin * 2,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}>
       {z.pulse && (
-        <div style={{ position: "absolute", inset: -8, borderRadius: z.shape === "circle" ? "50%" : 16, border: `2px solid ${z.pulseColor ?? "#fff"}50`, animation: "pulse-ring 2.4s ease-out infinite" }} />
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: z.shape === "circle" ? "50%" : 16,
+          border: `2px solid ${z.pulseColor ?? "#fff"}50`,
+          animation: "pulse-ring 2.4s ease-out infinite",
+        }} />
       )}
       <motion.div
         initial={{ scale: 0.7, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.15, type: "spring", stiffness: 260, damping: 20 }}
-        style={{ width: size, height: size, border: `2px solid ${z.borderColor ?? "transparent"}`, background: z.background ?? "transparent", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", ...shapeStyle }}
+        style={{
+          width: size, height: size,
+          border: `2px solid ${z.borderColor ?? "transparent"}`,
+          background: z.background ?? "transparent",
+          backdropFilter: "blur(12px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          overflow: "hidden",
+          ...shapeStyle,
+        }}
       >
         {src
-          ? <img src={src} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ? <img src={src} alt="logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> // ← contain au lieu de cover
           : <span style={{ fontSize: size * 0.44 }}>{z.fallbackEmoji ?? "🍽️"}</span>
         }
       </motion.div>
@@ -149,7 +173,7 @@ function TitleBlock({
   const style: React.CSSProperties = {
     fontSize:      z.fontSize      ?? "clamp(40px,12vw,80px)",
     fontFamily:    z.fontFamily    ?? restaurant.font_display ?? "serif",
-    fontWeight:    z.fontWeight    ?? 900,
+    fontWeight:    z.fontWeight    ?? 800,
     color:         z.color         ?? "#fff",
     letterSpacing: z.letterSpacing ?? "-0.03em",
     lineHeight:    z.lineHeight    ?? 1,
@@ -157,6 +181,8 @@ function TitleBlock({
     textTransform: z.uppercase ? "uppercase" : "none",
     textAlign:     (z.align ?? "center") as React.CSSProperties["textAlign"],
     margin: 0,
+    wordBreak: "break-word",
+    overflow: "hidden",
   };
 
   let content: React.ReactNode;
@@ -324,8 +350,27 @@ type LayoutProps = {
 
 function BannerLayout({ h, restaurant, i18n }: LayoutProps) {
   return (
-    <div style={{ position: "relative", zIndex: 2, flex: 1, display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 24, padding: `0 ${h.paddingX ?? "32px"}` }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0 }}>
+    <div style={{
+      position: "relative", zIndex: 2, flex: 1,
+      display: "grid",
+      gridTemplateColumns: "1fr auto",   // ← texte prend l'espace, logo garde sa taille fixe
+      gridTemplateRows: "1fr",
+      alignItems: "center",
+      gap: 24,
+      padding: `10px ${h.paddingX ?? "32px"}`,
+      boxSizing: "border-box",
+      width: "100%",
+      overflow: "hidden",
+    }}>
+      {/* Colonne texte — ne déborde jamais sur le logo */}
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: 0,
+        minWidth: 0,           // ← CRUCIAL : autorise le texte à se rétrécir
+        overflow: "hidden",
+      }}>
         <TitleBlock
           z={h.title}
           restaurant={restaurant}
@@ -336,11 +381,22 @@ function BannerLayout({ h, restaurant, i18n }: LayoutProps) {
         <DividerBlock  z={h.divider} />
         <TaglineBlock  z={h.tagline} resolvedTagline={i18n.tagline} />
       </div>
-      {h.logo.show && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <LogoBlock z={h.logo} restaurant={restaurant} />
-        </div>
-      )}
+
+      {/* Colonne logo — isolée dans sa propre cellule grid */}
+      {h.logo.show
+        ? (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,     // ← ne rétrécit jamais
+            padding: 8,        // ← respiration pour le pulse-ring
+          }}>
+            <LogoBlock z={h.logo} restaurant={restaurant} />
+          </div>
+        )
+        : <div />              // ← cellule vide pour maintenir la grille
+      }
     </div>
   );
 }
