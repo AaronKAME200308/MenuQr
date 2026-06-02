@@ -357,12 +357,19 @@ export default function MenuPage({ slug }: MenuPageProps) {
 
           {/* ── Footer ─────────────────────────────────────────── */}
           <footer style={{ textAlign: "center", padding: "24px 16px 40px", borderTop: `1px solid ${colors.primary}08` }}>
-            <p style={{ fontSize: 10, letterSpacing: "0.2em", color: `${colors.primary}22`, fontFamily: "sans-serif", textTransform: "uppercase" }}>
+            <p style={{ fontSize: 10, letterSpacing: "0.2em", color: `${colors.primary}80`, fontFamily: "sans-serif", textTransform: "uppercase" }}>
               {/* Nom traduit depuis la BD */}
               {restaurantDisplayName} · {t("digital_menu")}
             </p>
-            <p style={{ fontSize: 9, marginTop: 4, color: `${colors.primary}14`, fontFamily: "sans-serif" }}>
+            <p style={{ fontSize: 9, marginTop: 4, color: `${colors.primary}60`, fontFamily: "sans-serif" }}>
               {t("powered_by")}
+            </p>
+            <p style={{ fontSize: 16, color: `${colors.primary}80`, fontFamily: "sans-serif" }}>
+              {restaurant.address && (
+                <span style={{ color: `${colors.primary}` }}>
+                  {t("Address")} : {restaurantDisplayName} - {tField(restaurant.address_translations, restaurant.address)}<br />
+                </span>
+              )}
             </p>
           </footer>
 

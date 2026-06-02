@@ -97,6 +97,7 @@ export interface Restaurant {
   social_website?: string;
   phone?: string;
   address?: string;
+  mail?: string;
   created_at: string;
   currency?: string;
   // i18n

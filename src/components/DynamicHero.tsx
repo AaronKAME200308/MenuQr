@@ -352,51 +352,86 @@ function BannerLayout({ h, restaurant, i18n }: LayoutProps) {
   return (
     <div style={{
       position: "relative", zIndex: 2, flex: 1,
-      display: "grid",
-      gridTemplateColumns: "1fr auto",   // ← texte prend l'espace, logo garde sa taille fixe
-      gridTemplateRows: "1fr",
-      alignItems: "center",
-      gap: 24,
-      padding: `10px ${h.paddingX ?? "32px"}`,
+      display: "flex",
+      flexDirection: "column",
+      padding: `10px ${h.paddingX ?? "24px"}`,
       boxSizing: "border-box",
       width: "100%",
       overflow: "hidden",
+      gap: 8,
     }}>
-      {/* Colonne texte — ne déborde jamais sur le logo */}
+
+      {/* ── Ligne 1 : Titre pleine largeur en haut ── */}
+      <TitleBlock
+        z={{
+          ...h.title,
+          fontSize: h.title.fontSize ?? "clamp(22px, 6vw, 48px)",
+          align: "left",
+        }}
+        restaurant={restaurant}
+        resolvedLines={i18n.titleLines}
+        resolvedRestaurantName={i18n.restaurantName}
+      />
+
+      {/* ── Ligne 2 : Subtitle à gauche / Logo à droite ── */}
       <div style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
+        display: "grid",
+        gridTemplateColumns: "60% 40%",
+        alignItems: "center",
         gap: 0,
-        minWidth: 0,           // ← CRUCIAL : autorise le texte à se rétrécir
-        overflow: "hidden",
+        width: "100%",
       }}>
-        <TitleBlock
-          z={h.title}
-          restaurant={restaurant}
-          resolvedLines={i18n.titleLines}
-          resolvedRestaurantName={i18n.restaurantName}
-        />
-        <SubtitleBlock z={h.subtitle} resolvedRestaurantName={i18n.restaurantName} />
-        <DividerBlock  z={h.divider} />
-        <TaglineBlock  z={h.tagline} resolvedTagline={i18n.tagline} />
+
+        {/* Colonne gauche : subtitle + divider + tagline */}
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          gap: 0,
+          minWidth: 0,
+          overflow: "hidden",
+        }}>
+          <SubtitleBlock
+            z={{
+              ...h.subtitle,
+              fontSize: h.subtitle.fontSize ?? "clamp(11px, 3vw, 15px)",
+            }}
+            resolvedRestaurantName={i18n.restaurantName}
+          />
+          <DividerBlock z={h.divider} />
+          <TaglineBlock
+            z={{
+              ...h.tagline,
+              fontSize: h.tagline.fontSize ?? "10px",
+            }}
+            resolvedTagline={i18n.tagline}
+          />
+        </div>
+
+        {/* Colonne droite : logo */}
+        {h.logo.show
+          ? (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              width: "100%",
+              boxSizing: "border-box",
+              paddingRight: 12, 
+            }}>
+              <LogoBlock
+                z={{
+                  ...h.logo,
+                  size: Math.min(h.logo.size ?? 50, Math.round(window.innerWidth * 0.40 * 0.8)),
+                }}
+                restaurant={restaurant}
+              />
+            </div>
+          )
+          : <div />
+        }
       </div>
 
-      {/* Colonne logo — isolée dans sa propre cellule grid */}
-      {h.logo.show
-        ? (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,     // ← ne rétrécit jamais
-            padding: 8,        // ← respiration pour le pulse-ring
-          }}>
-            <LogoBlock z={h.logo} restaurant={restaurant} />
-          </div>
-        )
-        : <div />              // ← cellule vide pour maintenir la grille
-      }
     </div>
   );
 }

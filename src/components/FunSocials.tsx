@@ -3,7 +3,7 @@
 // Ne connaît pas la langue — reste pur.
 
 import { motion }  from "framer-motion";
-import { Phone }   from "lucide-react";
+import { Phone, Mail }   from "lucide-react";
 import type { FC } from "react";
 
 import type { Restaurant, Colors, RestaurantConfig } from "./types";
@@ -48,6 +48,7 @@ const SOCIAL_META: SocialMeta[] = [
     </svg>
   )},
 ];
+
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -100,6 +101,16 @@ const FunSocials: FC<FunSocialsProps> = ({
           href:  `tel:${restaurant.phone}`,
         }]
       : []),
+    ...(restaurant.mail
+      ? [{
+          key:   "mail",
+          label: "Email",
+          emoji: "✉️",
+          bg:    "#555555",
+          Icon:  Mail,
+          href:  `mailto:${restaurant.mail}`,
+        }]
+      : []),
   ];
 
   if (socials.length === 0) return null;
@@ -143,7 +154,7 @@ const FunSocials: FC<FunSocialsProps> = ({
 
       {/* ── Grille / rangée de boutons ── */}
       <div style={gridStyle}>
-        {socials.map(({ key, label, emoji, bg, Icon, href }, idx) => (
+        {socials.map(({ key, label, bg, Icon, href }, idx) => (
           <motion.a
             key={key}
             href={href}
@@ -189,7 +200,7 @@ const FunSocials: FC<FunSocialsProps> = ({
 
             <div style={{ textAlign: "center" }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: colors.primary, marginBottom: 2 }}>
-                {emoji} {label}
+              {label}
               </p>
               {key !== "phone" && (
                 <p style={{
