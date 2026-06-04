@@ -16,7 +16,7 @@ type CategoryNavProps = {
 
 export default function CategoryNav({
   colors,
-  activeCats,
+  activeCats = [],
   activeCategory,
   setActive,
   allLabel = "Tout",
@@ -42,11 +42,11 @@ export default function CategoryNav({
       el.removeEventListener("scroll", checkScroll);
       window.removeEventListener("resize", checkScroll);
     };
-  }, [activeCats]);
+  }, [activeCats]); // activeCats est normalisé à [] par défaut
 
   const allCats: Pick<Category, "id" | "name" | "icon">[] = [
     { id: "all", name: allLabel, icon: "🍽️" },
-    ...activeCats,
+    ...(Array.isArray(activeCats) ? activeCats : []),
   ];
 
   const handleClick = (id: string, el: HTMLButtonElement | null) => {
@@ -99,17 +99,17 @@ export default function CategoryNav({
                   whiteSpace: "nowrap",
                   cursor: "pointer",
                   outline: "none",
-                  border: isActive ? "none" : `1.5px solid ${colors.primary}14`,
-                  background: isActive ? "transparent" : `${colors.primary}09`,
-                  color: isActive ? colors.bg : `${colors.primary}70`,
-                  boxShadow: isActive ? `0 6px 20px ${colors.primary}35, 0 2px 6px ${colors.primary}20` : "0 1px 3px rgba(0,0,0,0.08)",
+                  border: isActive ? "none" : `1.5px solid ${colors.accent}80`,
+                  background: isActive ? "transparent" : `${colors.accent}09`,
+                  color: isActive ? colors.bg : `${colors.accent}70`,
+                  boxShadow: isActive ? `0 6px 20px ${colors.accent}35, 0 2px 6px ${colors.accent}20` : "0 1px 3px rgba(0,0,0,0.08)",
                   transition: "color 0.2s, border-color 0.2s, box-shadow 0.2s, padding 0.2s",
                 }}
               >
                 {isActive && (
                   <motion.span
                     layoutId="active-pill-v4"
-                    style={{ position: "absolute", inset: 0, borderRadius: 999, background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primary}dd 100%)`, boxShadow: `0 6px 20px ${colors.primary}40, 0 2px 6px ${colors.primary}25, inset 0 1px 0 rgba(255,255,255,0.22)`, zIndex: 0 }}
+                    style={{ position: "absolute", inset: 0, borderRadius: 999, background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accent}dd 100%)`, boxShadow: `0 6px 20px ${colors.accent}40, 0 2px 6px ${colors.accent}25, inset 0 1px 0 rgba(255,255,255,0.22)`, zIndex: 0 }}
                     transition={{ type: "spring", stiffness: 440, damping: 34 }}
                   />
                 )}

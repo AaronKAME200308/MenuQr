@@ -16,8 +16,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Leaf, Flame, Share2 } from "lucide-react";
 import { fmt } from "./ItemCard";
-import type { MenuItem, Colors } from "./types";
-
+import type { MenuItem, Colors, TextConfig } from "./types";
 const IMG_D    = 128;
 const OVERHANG = 64;
 
@@ -35,7 +34,7 @@ function DragHandle() {
         width: 36,
         height: 4,
         borderRadius: 99,
-        background: "rgba(255,255,255,0.35)",
+        background: "rgba(255,255,255,0.30)",
         zIndex: 30,
       }}
     />
@@ -44,7 +43,7 @@ function DragHandle() {
 
 // ─── Image circulaire ──────────────────────────────────────
 
-function DishImage({ src, alt, accent }: { src?: string; alt: string; accent: string }) {
+function DishImage({ src, alt, accent, bg }: { src?: string; alt: string; accent: string; bg: string }) {
   return (
     <motion.div
       initial={{ scale: 0.82, opacity: 0, y: 12 }}
@@ -59,9 +58,9 @@ function DishImage({ src, alt, accent }: { src?: string; alt: string; accent: st
         height: IMG_D,
         borderRadius: "50%",
         overflow: "hidden",
-        boxShadow: `0 12px 40px rgba(0,0,0,0.32), 0 0 0 5px #fff, 0 0 0 9px ${accent}38`,
+        boxShadow: `0 12px 40px rgba(0,0,0,0.22), 0 0 0 5px ${bg}, 0 0 0 9px ${accent}38`,
         zIndex: 10,
-        background: "#e8e8e8",
+        background: `${accent}18`,
       }}
     >
       {src ? (
@@ -79,7 +78,7 @@ function DishImage({ src, alt, accent }: { src?: string; alt: string; accent: st
             alignItems: "center",
             justifyContent: "center",
             fontSize: 52,
-            background: "#f0ede6",
+            background: `${bg}`,
           }}
         >
           🍽️
@@ -91,7 +90,7 @@ function DishImage({ src, alt, accent }: { src?: string; alt: string; accent: st
 
 // ─── Badges diète ──────────────────────────────────────────
 
-function DietBadges({ isVegetarian, isSpicy }: { isVegetarian: boolean; isSpicy: boolean }) {
+function DietBadges({ isVegetarian, isSpicy, labelVegetarian, labelSpicy }: { isVegetarian: boolean; isSpicy: boolean; labelVegetarian: string; labelSpicy: string }) {
   if (!isVegetarian && !isSpicy) return null;
   return (
     <div style={{ display: "flex", gap: 6, marginTop: 10, zIndex: 2, flexWrap: "wrap", justifyContent: "center" }}>
@@ -103,7 +102,7 @@ function DietBadges({ isVegetarian, isSpicy }: { isVegetarian: boolean; isSpicy:
           border: "1px solid rgba(255,255,255,0.3)",
           fontSize: 10, fontWeight: 700, color: "#fff",
         }}>
-          <Leaf size={9} color="#fff" /> Végétarien
+          <Leaf size={9} color="#fff" /> {labelVegetarian}
         </span>
       )}
       {isSpicy && (
@@ -113,7 +112,7 @@ function DietBadges({ isVegetarian, isSpicy }: { isVegetarian: boolean; isSpicy:
           background: "rgba(255,80,0,0.45)",
           fontSize: 10, fontWeight: 700, color: "#fff",
         }}>
-          <Flame size={9} color="#fff" /> Épicé
+          <Flame size={9} color="#fff" /> {labelSpicy}
         </span>
       )}
     </div>
@@ -122,7 +121,7 @@ function DietBadges({ isVegetarian, isSpicy }: { isVegetarian: boolean; isSpicy:
 
 // ─── Pastille ingrédient ───────────────────────────────────
 
-function IngPill({ icon, name, index }: { icon?: string; name: string; index: number }) {
+function IngPill({ icon, name, index, primary }: { icon?: string; name: string; index: number; primary: string; bg: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.72, y: 8 }}
@@ -142,13 +141,13 @@ function IngPill({ icon, name, index }: { icon?: string; name: string; index: nu
           width: 52,
           height: 52,
           borderRadius: 16,
-          background: "#f2f2f2",
+          background: `${primary}09`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontSize: 26,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
-          border: "0.5px solid rgba(0,0,0,0.06)",
+          boxShadow: `0 2px 8px ${primary}10`,
+          border: `0.5px solid ${primary}14`,
         }}
       >
         {icon ?? "🌿"}
@@ -157,7 +156,7 @@ function IngPill({ icon, name, index }: { icon?: string; name: string; index: nu
         style={{
           fontSize: 10,
           fontWeight: 600,
-          color: "#888",
+          color: `${primary}60`,
           fontFamily: "sans-serif",
           textAlign: "center",
           maxWidth: 54,
@@ -179,9 +178,10 @@ type Props = {
   colors:  Colors;
   config:  any;
   onClose: () => void;
+  text: TextConfig;
 };
 
-export default function ItemModal({ item, colors, onClose }: Props) {
+export default function ItemModal({ item, colors, onClose, text  }: Props) {
   const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
 
   // Reset variante à chaque nouveau plat
@@ -209,9 +209,10 @@ export default function ItemModal({ item, colors, onClose }: Props) {
       ? item.variants[selectedVariant].currency
       : item?.currency ?? "EUR";
 
-  const accent = colors.accent;
-  const dark   = "#1c1c1c";
-  const muted  = "#888";
+  const accent   = colors.accent;
+  const primary  = colors.primary;
+  const dark     = colors.primary;      // titres et prix
+  const muted    = `${colors.accent}70`; // textes secondaires
 
   return (
     <AnimatePresence>
@@ -249,7 +250,7 @@ export default function ItemModal({ item, colors, onClose }: Props) {
               maxWidth: 480,
               maxHeight: "92vh",
               borderRadius: "28px 28px 0 0",
-              background: "#fff",
+              background: colors.bg,
               display: "flex",
               flexDirection: "column",
               overflow: "visible",
@@ -360,9 +361,9 @@ export default function ItemModal({ item, colors, onClose }: Props) {
                 {item.name}
               </h2>
 
-              <DietBadges isVegetarian={item.is_vegetarian} isSpicy={item.is_spicy} />
+              <DietBadges isVegetarian={item.is_vegetarian} isSpicy={item.is_spicy} labelVegetarian={text.vegetarian} labelSpicy={text.spicy} />
 
-              <DishImage src={item.image_url} alt={item.name} accent={accent} />
+              <DishImage src={item.image_url} alt={item.name} accent={accent} bg={colors.bg} />
             </div>
 
             {/* ══ SECTION BASSE ══ */}
@@ -376,7 +377,7 @@ export default function ItemModal({ item, colors, onClose }: Props) {
                 flexDirection: "column",
                 gap: 20,
                 padding: `${OVERHANG + 28}px 22px 36px`,
-                background: "#fff",
+                background: colors.bg,
               }}
             >
               {/* ── Prix + disponibilité ── */}
@@ -386,20 +387,20 @@ export default function ItemModal({ item, colors, onClose }: Props) {
                   alignItems: "flex-end",
                   justifyContent: "space-between",
                   paddingBottom: 18,
-                  borderBottom: "0.5px solid rgba(0,0,0,0.08)",
+                  borderBottom: `0.5px solid ${colors.primary}12`,
                 }}
               >
                 <div>
                   <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: muted, fontFamily: "sans-serif", marginBottom: 4 }}>
-                    Prix
+                    {text.prix}
                   </p>
                   <p style={{ fontSize: 30, fontWeight: 900, color: dark, letterSpacing: "-0.04em", lineHeight: 1 }}>
                     {fmt(displayPrice, displayCurrency)}
                   </p>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#4caf50", display: "inline-block" }} />
-                  <span style={{ fontSize: 10, color: muted, fontFamily: "sans-serif" }}>Disponible</span>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: colors.accent, display: "inline-block" }} />
+                  <span style={{ fontSize: 10, color: muted, fontFamily: "sans-serif" }}>{text.disponible}</span>
                 </div>
               </div>
 
@@ -407,7 +408,7 @@ export default function ItemModal({ item, colors, onClose }: Props) {
               {item.variants && item.variants.length > 0 && (
                 <div>
                   <p style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: muted, fontFamily: "sans-serif", marginBottom: 10 }}>
-                    Taille
+                    {text.variants}
                   </p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {item.variants.map((v, i) => {
@@ -420,8 +421,8 @@ export default function ItemModal({ item, colors, onClose }: Props) {
                           style={{
                             padding: "9px 16px",
                             borderRadius: 12,
-                            border: `1.5px solid ${sel ? accent : "rgba(0,0,0,0.10)"}`,
-                            background: sel ? `${accent}14` : "#fafafa",
+                            border: `1.5px solid ${sel ? accent : `${primary}18`}`,
+                            background: sel ? `${accent}14` : `${primary}06`,
                             cursor: "pointer",
                             display: "flex",
                             flexDirection: "column",
@@ -447,11 +448,11 @@ export default function ItemModal({ item, colors, onClose }: Props) {
               {item.ingredients && item.ingredients.length > 0 && (
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 800, color: dark, marginBottom: 12, letterSpacing: "-0.01em" }}>
-                    Ingrédients
+                    {text.ingredients}
                   </p>
                   <div style={{ display: "flex", gap: 10, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 4 }}>
                     {item.ingredients.map((ing, i) => (
-                      <IngPill key={i} icon={ing.icon} name={ing.name} index={i} />
+                      <IngPill key={i} icon={ing.icon} name={ing.name} index={i} primary={primary} bg={colors.bg} />
                     ))}
                   </div>
                 </div>
@@ -461,7 +462,7 @@ export default function ItemModal({ item, colors, onClose }: Props) {
               {item.description && (
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 800, color: dark, marginBottom: 8, letterSpacing: "-0.01em" }}>
-                    Description
+                    {text.description}
                   </p>
                   <p style={{ fontSize: 13, lineHeight: 1.85, color: muted, fontFamily: "sans-serif" }}>
                     {item.description}

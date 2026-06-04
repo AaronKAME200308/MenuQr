@@ -20,6 +20,18 @@ export interface Colors {
   primary: string;
   accent: string;
   card: string;
+  main: string;
+}
+
+/** Labels UI déjà traduits, construits dans MenuPage via t() */
+export interface TextConfig {
+  prix:        string;
+  variants:    string;
+  ingredients: string;
+  description: string;
+  disponible:  string;
+  spicy:       string;
+  vegetarian:   string;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -61,7 +73,6 @@ export interface MenuItem {
   created_at: string;
   ingredients?: Ingredient[];
   variants?: Variant[];
-  // i18n
   name_translations?:        Record<SupportedLang, string>;
   description_translations?: Record<SupportedLang, string>;
 }
@@ -73,7 +84,6 @@ export interface Category {
   icon?: string;
   sort_order: number;
   created_at: string;
-  // i18n
   name_translations?: Record<SupportedLang, string>;
 }
 
@@ -87,6 +97,7 @@ export interface Restaurant {
   color_primary: string;
   color_accent: string;
   color_card: string;
+  color_main: string;
   font_display?: string;
   font_body?: string;
   social_facebook?: string;
@@ -100,10 +111,9 @@ export interface Restaurant {
   mail?: string;
   created_at: string;
   currency?: string;
-  // i18n
   supported_languages?:   SupportedLang[];
   default_language?:      SupportedLang;
-  name_translations?:     Record<SupportedLang, string>;   // ← nouveau
+  name_translations?:     Record<SupportedLang, string>;
   tagline_translations?:  Record<SupportedLang, string>;
   address_translations?:  Record<SupportedLang, string>;
 }
@@ -152,7 +162,6 @@ export interface HeroTitle {
   show: boolean;
   mode?: "big-editorial" | "restaurant-name" | "custom" | "stacked";
   customText?: string;
-  /** Fallback statique quand i18n.heroTitleLines est absent */
   stackedLines?: string[];
   fontSize?: string;
   fontFamily?: string;
@@ -167,7 +176,6 @@ export interface HeroTitle {
 
 export interface HeroSubtitle {
   show: boolean;
-  /** Override statique. Si absent : utilise le name traduit depuis la BD. */
   text?: string;
   fontSize?: string;
   fontFamily?: string;
@@ -187,7 +195,6 @@ export interface HeroDivider {
 
 export interface HeroTagline {
   show: boolean;
-  /** Override statique. Si absent : utilise tagline traduit depuis la BD. */
   text?: string;
   fontSize?: string;
   color?: string;
@@ -204,12 +211,7 @@ export interface HeroFooterBand {
   addressColor?: string;
   addressIcon?: boolean;
   showBadge?: boolean;
-  /** Texte statique fallback */
   badgeText?: string;
-  /**
-   * Traductions du badge par langue — prioritaire sur badgeText.
-   * { fr: "Ouvert maintenant", en: "Open now", de: "Jetzt geöffnet" }
-   */
   badgeTextTranslations?: Record<SupportedLang, string>;
   badgeBackground?: string;
   badgeColor?: string;
@@ -269,25 +271,9 @@ export interface SocialsConfig {
 // ─────────────────────────────────────────────────────────────
 
 export interface I18nConfig {
-  /** Langue par défaut (override de restaurant.default_language) */
   defaultLanguage: SupportedLang;
-  /** Langues du sélecteur (override de restaurant.supported_languages) */
   supportedLanguages?: SupportedLang[];
-
-  /**
-   * Traductions des lignes du titre hero (mode "stacked").
-   * {
-   *   fr: ["Street Food", "Camerounaise"],
-   *   en: ["Cameroonian", "Street Food"],
-   *   de: ["Kamerunisches", "Streetfood"],
-   * }
-   */
   heroTitleLines?: Record<SupportedLang, string[]>;
-
-  /**
-   * Traductions du label section socials.
-   * { fr: "🌍 Rejoins la communauté", en: "🌍 Join us", de: "🌍 Mach mit" }
-   */
   socialsLabel?: Record<SupportedLang, string>;
 }
 

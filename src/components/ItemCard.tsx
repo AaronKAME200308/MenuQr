@@ -22,10 +22,13 @@ export function fmt(price: number, currency = "XAF"): string {
 // ─────────────────────────────────────────────────────────────
 
 interface DishBadgeProps {
-  item: MenuItem;
+  item:            MenuItem;
+  labelBestseller: string;
+  labelPopular:    string;
+  labelNew:        string;
 }
 
-export const DishBadge: FC<DishBadgeProps> = ({ item }) => {
+export const DishBadge: FC<DishBadgeProps> = ({ item, labelBestseller, labelPopular, labelNew }) => {
   const base: React.CSSProperties = {
     display:     "inline-flex",
     alignItems:  "center",
@@ -37,17 +40,17 @@ export const DishBadge: FC<DishBadgeProps> = ({ item }) => {
   };
   if (item.is_bestseller) return (
     <span style={{ ...base, background: "linear-gradient(135deg,#c8a84b,#f5d98b)", color: "#3a2800" }}>
-      <Star size={8} fill="#3a2800" strokeWidth={0} /> Best Seller
+      <Star size={8} fill="#3a2800" strokeWidth={0} /> {labelBestseller}
     </span>
   );
   if (item.is_popular) return (
     <span style={{ ...base, background: "rgba(255,100,50,0.18)", color: "#ff9060" }}>
-      <Flame size={8} /> Populaire
+      <Flame size={8} /> {labelPopular}
     </span>
   );
   if (item.is_new) return (
     <span style={{ ...base, background: "rgba(80,200,120,0.18)", color: "#50c878" }}>
-      <Sparkles size={8} /> Nouveau
+      <Sparkles size={8} /> {labelNew}
     </span>
   );
   return null;
@@ -99,7 +102,7 @@ const FloatingImage: FC<FloatingImageProps> = ({ src, alt, colors, delay = 0 }) 
         borderRadius: "50%",
         overflow:     "hidden",
         border:       `3px solid ${colors.accent}`,
-        boxShadow:    `0 14px 40px rgba(0,0,0,0.5), 0 0 0 6px ${colors.card}`,
+        boxShadow:    `0 8px 28px ${colors.accent}20, 0 0 0 5px ${colors.bg}`,
         zIndex:       2,
         cursor:       "pointer",
       }}
@@ -107,7 +110,7 @@ const FloatingImage: FC<FloatingImageProps> = ({ src, alt, colors, delay = 0 }) 
       {src ? (
         <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       ) : (
-        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, background: `${colors.bg}80` }}>
+        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, background: `${colors.primary}0a` }}>
           🍽️
         </div>
       )}
@@ -120,14 +123,27 @@ const FloatingImage: FC<FloatingImageProps> = ({ src, alt, colors, delay = 0 }) 
 // ─────────────────────────────────────────────────────────────
 
 interface ItemCardProps {
-  item:   MenuItem;
-  colors: Colors;
+  item:            MenuItem;
+  colors:          Colors;
   /** Index global dans la liste (stagger + numéro affiché) */
-  index:  number;
-  onOpen: (item: MenuItem) => void;
+  index:           number;
+  onOpen:          (item: MenuItem) => void;
+  /** Labels traduits par MenuPage */
+  labelVoir:       string;
+  labelTailles:    string;
+  labelBestseller: string;
+  labelPopular:    string;
+  labelNew:        string;
+  labelVegetarian: string;
+  labelSpicy:      string;
 }
 
-const ItemCard: FC<ItemCardProps> = ({ item, colors, index, onOpen }) => {
+const ItemCard: FC<ItemCardProps> = ({
+  item, colors, index, onOpen,
+  labelVoir, labelTailles,
+  labelBestseller, labelPopular, labelNew,
+  labelVegetarian, labelSpicy,
+}) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -146,7 +162,7 @@ const ItemCard: FC<ItemCardProps> = ({ item, colors, index, onOpen }) => {
         duration: 0.45,
         ease:     [0.34, 1.3, 0.64, 1],
       }}
-      whileHover={{ y: -7, boxShadow: "0 22px 55px rgba(0,0,0,0.45)", transition: { duration: 0.28, ease: "easeOut" } }}
+      whileHover={{ y: -7, boxShadow: `0 18px 44px ${colors.primary}1a`, transition: { duration: 0.28, ease: "easeOut" } }}
       whileTap={{ scale: 0.96 }}
       onClick={() => onOpen(item)}
       role="button"
@@ -159,15 +175,15 @@ const ItemCard: FC<ItemCardProps> = ({ item, colors, index, onOpen }) => {
         alignItems:          "center",
         paddingTop:          OVERHANG,
         marginTop:           OVERHANG,
-        background:          `${colors.card}e0`,
-        border:              `3px solid ${colors.primary}`,
+        background:          `${colors.accent}10`,
+        backdropFilter: "blur(12px)",
+        border:              `3px solid ${colors.accent}90`,
         borderRadius:        20,
-        backdropFilter:      "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
         overflow:            "visible",
         position:            "relative",
         outline:             "none",
         cursor:              "pointer",
+        boxShadow:           `0 4px 16px ${colors.accent}0c`,
       }}
     >
       {/* Image flottante */}
@@ -181,7 +197,7 @@ const ItemCard: FC<ItemCardProps> = ({ item, colors, index, onOpen }) => {
         width:           20,
         height:          20,
         borderRadius:    "50%",
-        background:      `${colors.accent}cc`,
+        background:      colors.accent,
         color:           colors.primary,
         display:         "flex",
         alignItems:      "center",
@@ -203,7 +219,12 @@ const ItemCard: FC<ItemCardProps> = ({ item, colors, index, onOpen }) => {
         width:          "100%",
         textAlign:      "center",
       }}>
-        <DishBadge item={item} />
+        <DishBadge
+          item={item}
+          labelBestseller={labelBestseller}
+          labelPopular={labelPopular}
+          labelNew={labelNew}
+        />
 
         <p style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2, color: colors.primary, letterSpacing: "-0.01em", marginTop: 4 }}>
           {item.name}
@@ -213,7 +234,7 @@ const ItemCard: FC<ItemCardProps> = ({ item, colors, index, onOpen }) => {
           <p style={{
             fontSize:          10,
             lineHeight:        1.5,
-            color:             colors.accent,
+            color:             `${colors.accent}90`,
             display:           "-webkit-box",
             WebkitLineClamp:   2,
             WebkitBoxOrient:   "vertical",
@@ -226,19 +247,19 @@ const ItemCard: FC<ItemCardProps> = ({ item, colors, index, onOpen }) => {
         {/* Icônes régime */}
         <div style={{ display: "flex", gap: 4, marginTop: 2 }}>
           {item.is_vegetarian && (
-            <span style={{ width: 18, height: 18, borderRadius: "50%", background: "#50c878cc", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span title={labelVegetarian} style={{ width: 18, height: 18, borderRadius: "50%", background: "#50c878cc", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Leaf size={10} color="#fff" />
             </span>
           )}
           {item.is_spicy && (
-            <span style={{ width: 18, height: 18, borderRadius: "50%", background: "#ff4500cc", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span title={labelSpicy} style={{ width: 18, height: 18, borderRadius: "50%", background: "#ff4500cc", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Flame size={10} color="#fff" />
             </span>
           )}
         </div>
 
         {/* Séparateur */}
-        <div style={{ width: 28, height: 1, background: `${colors.primary}15`, margin: "6px 0" }} />
+        <div style={{ width: 28, height: 1, background: `${colors.primary}12`, margin: "6px 0" }} />
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
           <p style={{ fontSize: 15, fontWeight: 900, color: colors.primary, letterSpacing: "-0.02em" }}>
@@ -246,15 +267,15 @@ const ItemCard: FC<ItemCardProps> = ({ item, colors, index, onOpen }) => {
           </p>
           <motion.span
             whileHover={{ x: 3 }}
-            style={{ fontSize: 10, color: `${colors.primary}35`, fontFamily: "sans-serif" }}
+            style={{ fontSize: 10, color: `${colors.accent}`, fontFamily: "sans-serif" }}
           >
-            voir →
+            {labelVoir}
           </motion.span>
         </div>
 
         {item.variants && item.variants.length > 0 && (
-          <p style={{ fontSize: 9, color: `${colors.primary}30`, fontFamily: "sans-serif" }}>
-            {item.variants.length} tailles
+          <p style={{ fontSize: 9, color: `${colors.primary}35`, fontFamily: "sans-serif" }}>
+            {item.variants.length} {labelTailles}
           </p>
         )}
       </div>

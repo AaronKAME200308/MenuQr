@@ -22,6 +22,7 @@ import type {
   Category,
   MenuItem,
   Colors,
+  TextConfig,
 } from "./types";
 
 // ─────────────────────────────────────────────────────────────
@@ -127,10 +128,11 @@ export default function MenuPage({ slug }: MenuPageProps) {
 
   // ── Couleurs ─────────────────────────────────────────────────
   const colors: Colors = useMemo<Colors>(() => ({
-    bg:      restaurant?.color_bg      ?? "#0a2e20",
-    primary: restaurant?.color_primary ?? "#F5E6C8",
-    accent:  restaurant?.color_accent  ?? "#1a5c3a",
-    card:    restaurant?.color_card    ?? "#0d3d28",
+    bg:      restaurant?.color_bg      ?? "#ffffff",
+    primary: restaurant?.color_primary ?? "#1a5c3a",
+    accent:  restaurant?.color_accent  ?? "#F5C518",
+    card:    restaurant?.color_card    ?? "#ffffff",
+    main:    restaurant?.color_main    ?? "#F5E6C8",
   }), [restaurant]);
 
   // ── Prop i18n du DynamicHero ──────────────────────────────────
@@ -155,6 +157,30 @@ export default function MenuPage({ slug }: MenuPageProps) {
     () => tField(restaurant?.name_translations, restaurant?.name ?? ""),
     [restaurant, tField],
   );
+
+  // ── Labels traduits pour le modal ───────────────────────────────
+  const modalText = useMemo<TextConfig>(() => ({
+    prix:        t("label_prix"),
+    variants:    t("label_variants"),
+    ingredients: t("label_ingredients"),
+    description: t("label_description"),
+    disponible:  t("label_disponible"),
+    vegetarian:  t("label_vegetarian"),
+    spicy:       t("label_spicy"),
+  }), [t]);
+
+  // ── Labels traduits pour les cartes ──────────────────────────
+  const labelVoir        = useMemo(() => t("label_voir"),        [t]);
+  const labelTailles     = useMemo(() => t("label_tailles"),     [t]);
+  const labelBestseller  = useMemo(() => t("label_bestseller"),  [t]);
+  const labelPopular     = useMemo(() => t("label_popular"),     [t]);
+  const labelNew         = useMemo(() => t("label_new"),         [t]);
+  const labelVegetarian  = useMemo(() => t("label_vegetarian"),  [t]);
+  const labelSpicy       = useMemo(() => t("label_spicy"),       [t]);
+
+  // ── Labels traduits pour FunSocials ──────────────────────────
+  const labelPhone       = useMemo(() => t("label_appeler"),     [t]);
+  const labelMail        = useMemo(() => t("label_email"),       [t]);
 
   // ── Catégories avec noms traduits ────────────────────────────
   const translatedCategories = useMemo<Category[]>(() =>
@@ -281,6 +307,7 @@ export default function MenuPage({ slug }: MenuPageProps) {
         colors={colors}
         config={config.modal}
         onClose={closeModal}
+        text={modalText}
       />
 
       <div style={{ position: "relative", zIndex: 1, minHeight: "100vh", width: "100%", overflow: "visible" }}>
@@ -340,6 +367,13 @@ export default function MenuPage({ slug }: MenuPageProps) {
                       config={config.card}
                       globalIndex={startIdx}
                       onOpen={openModal}
+                      labelVoir={labelVoir}
+                      labelTailles={labelTailles}
+                      labelBestseller={labelBestseller}
+                      labelPopular={labelPopular}
+                      labelNew={labelNew}
+                      labelVegetarian={labelVegetarian}
+                      labelSpicy={labelSpicy}
                     />
                   );
                 })
@@ -347,12 +381,16 @@ export default function MenuPage({ slug }: MenuPageProps) {
             </AnimatePresence>
           </main>
 
+          <div style={{background: `${colors.main}`, padding: "24px 16px"}} >
+
           {/* ── Réseaux sociaux ────────────────────────────────── */}
           <FunSocials
             restaurant={restaurant}
             colors={colors}
             config={config}
             sectionLabel={socialsLabel}
+            labelPhone={labelPhone}
+            labelMail={labelMail}
           />
 
           {/* ── Footer ─────────────────────────────────────────── */}
@@ -372,7 +410,7 @@ export default function MenuPage({ slug }: MenuPageProps) {
               )}
             </p>
           </footer>
-
+              </div>
         </div>
       </div>
     </div>

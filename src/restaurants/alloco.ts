@@ -11,8 +11,8 @@ const allocoConfig: PartialRestaurantConfig = {
   background: {
     patternTop:           "diamonds",
     patternBottom:        "grid",
-    patternTopOpacity:    0.06,
-    patternBottomOpacity: 0.04,
+    patternTopOpacity:    0.6,
+    patternBottomOpacity: 0.4,
     blobTopLeft:          true,
     blobBottomRight:      true,
   },
@@ -27,7 +27,7 @@ const allocoConfig: PartialRestaurantConfig = {
       type:           "solid",
       color:          "#2E7D32",
       pattern:        "dots",
-      patternColor:   "#F5C518",
+      patternColor:   "#ffffff",
       patternOpacity: 0.07,
       shape:          "none",
     },
@@ -36,8 +36,8 @@ const allocoConfig: PartialRestaurantConfig = {
       show:          true,
       size:          180,
       shape:         "circle",
-      borderColor:   "#F5C51860",
-      background:    "rgba(255,255,255,0.10)",
+      borderColor:   "#F5C518",
+      background:    "#ffffff",
       pulse:         false,
       position:      "top-center",
       fallbackEmoji: "🍌",
@@ -46,11 +46,11 @@ const allocoConfig: PartialRestaurantConfig = {
     title: {
       show:          true,
       mode:          "stacked",
-      stackedLines:  ["Street Food", "Camerounaise"], // fallback si pas de traduction
+      stackedLines:  ["Street Food", "Camerounaise"],
       fontSize:      "clamp(36px, 8vw, 64px)",
       fontFamily:    "'Bebas Neue', sans-serif",
       fontWeight:    400,
-      color:         "#FFFFFF",
+      color:         "#ffffff",
       letterSpacing: "0.02em",
       lineHeight:    0.92,
       textShadow:    "0 4px 20px rgba(0,0,0,0.15)",
@@ -78,7 +78,7 @@ const allocoConfig: PartialRestaurantConfig = {
     tagline: {
       show:          true,
       fontSize:      "11px",
-      color:         "rgba(255,255,255,0.55)",
+      color:         "rgba(255,255,255,0.65)",
       letterSpacing: "0.12em",
       fontFamily:    "'Montserrat', sans-serif",
     },
@@ -92,7 +92,7 @@ const allocoConfig: PartialRestaurantConfig = {
         de: "Jetzt geöffnet",
       },
       badgeBackground: "#F5C518",
-      badgeColor:      "#1a3a00",
+      badgeColor:      "#1a5c3a",
     },
   },
 
@@ -123,7 +123,9 @@ const allocoConfig: PartialRestaurantConfig = {
     sectionLabel: "🌍 Rejoins la communauté Alloco",
     layout:       "grid",
     gridMinWidth: 150,
+    
   },
+
 
   // ── i18n ────────────────────────────────────────────────────
   // defaultLanguage et supportedLanguages DOIVENT être définis ici
@@ -138,9 +140,9 @@ const allocoConfig: PartialRestaurantConfig = {
     defaultLanguage:    "de",
     supportedLanguages: ["de", "fr", "en"],
     heroTitleLines: {
-      fr: ["Street Food",   "Camerounaise"],
-      en: ["Cameroonian",   "Street Food"],
-      de: ["Kamerunisches", "Streetfood"],
+      fr: ["Découvrez le style africain"],
+      en: ["Taste the African Vibes"],
+      de: ["Erlebe afrikanisches Flair"],
     },
     socialsLabel: {
       fr: "🌍 Rejoins la communauté Alloco",

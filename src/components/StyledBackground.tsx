@@ -91,8 +91,8 @@ const StyledBackground: FC<StyledBackgroundProps> = ({ colors, config }) => {
         aria-hidden
       >
         <defs>
-          {patternTop    !== "none" && topBuilder    && topBuilder(colors.primary)}
-          {patternBottom !== "none" && bottomBuilder && bottomBuilder(colors.primary)}
+          {patternTop    !== "none" && topBuilder    && topBuilder(colors.accent)}
+          {patternBottom !== "none" && bottomBuilder && bottomBuilder(colors.accent)}
         </defs>
 
         {patternTop !== "none" && topId && (
@@ -122,7 +122,7 @@ const StyledBackground: FC<StyledBackgroundProps> = ({ colors, config }) => {
           left:       "-18%",
           width:      "60%",
           height:     "60%",
-          background: `radial-gradient(ellipse, ${colors.accent}55 0%, transparent 65%)`,
+          background: `radial-gradient(ellipse, ${colors.accent}18 0%, transparent 65%)`,
           filter:     "blur(80px)",
         }} />
       )}
@@ -135,7 +135,7 @@ const StyledBackground: FC<StyledBackgroundProps> = ({ colors, config }) => {
           right:      "-12%",
           width:      "55%",
           height:     "50%",
-          background: `radial-gradient(ellipse, ${colors.accent}30 0%, transparent 65%)`,
+          background: `radial-gradient(ellipse, ${colors.accent}10 0%, transparent 65%)`,
           filter:     "blur(90px)",
         }} />
       )}

@@ -7,11 +7,12 @@ const defaultConfig: RestaurantConfig = {
   slug: "default",
 
   // ── Fond de page ────────────────────────────────────────────
+  // Blanc pur avec patterns verts très atténués + blobs radiaux verts
   background: {
     patternTop:           "diamonds",
     patternBottom:        "grid",
-    patternTopOpacity:    0.055,
-    patternBottomOpacity: 0.065,
+    patternTopOpacity:    0.07,
+    patternBottomOpacity: 0.09,
     blobTopLeft:          true,
     blobBottomRight:      true,
   },
@@ -27,10 +28,10 @@ const defaultConfig: RestaurantConfig = {
 
     background: {
       type:    "solid",
-      color:   "#0a2e20",
+      color:   "#2E7D32",
       pattern: "dots",
-      patternColor:   "#F5E6C8",
-      patternOpacity: 0.045,
+      patternColor:   "#ffffff",
+      patternOpacity: 0.06,
       shape:   "none",
     },
 
@@ -38,10 +39,10 @@ const defaultConfig: RestaurantConfig = {
       show:          true,
       size:          90,
       shape:         "circle",
-      borderColor:   "#F5E6C840",
-      background:    "rgba(255,255,255,0.06)",
+      borderColor:   "#ffffff40",
+      background:    "rgba(255,255,255,0.10)",
       pulse:         true,
-      pulseColor:    "#F5E6C8",
+      pulseColor:    "#F5C518",
       position:      "top-center",
       fallbackEmoji: "🍽️",
     },
@@ -52,7 +53,7 @@ const defaultConfig: RestaurantConfig = {
       fontSize:      "clamp(80px, 22vw, 160px)",
       fontFamily:    "Georgia, serif",
       fontWeight:    900,
-      color:         "#F5E6C8",
+      color:         "#ffffff",
       letterSpacing: "-0.04em",
       lineHeight:    0.88,
       textShadow:    "none",
@@ -64,7 +65,7 @@ const defaultConfig: RestaurantConfig = {
       show:          true,
       fontSize:      "clamp(12px, 3.5vw, 16px)",
       fontFamily:    "sans-serif",
-      color:         "#F5E6C890",
+      color:         "#F5C518",
       letterSpacing: "0.3em",
       fontStyle:     "normal",
     },
@@ -72,13 +73,13 @@ const defaultConfig: RestaurantConfig = {
     divider: {
       show:      true,
       style:     "dots",
-      color:     "#F5E6C840",
+      color:     "#ffffff40",
     },
 
     tagline: {
       show:          true,
       fontSize:      "11px",
-      color:         "#F5E6C855",
+      color:         "rgba(255,255,255,0.65)",
       letterSpacing: "0.15em",
       fontFamily:    "sans-serif",
       fontStyle:     "italic",
@@ -88,10 +89,10 @@ const defaultConfig: RestaurantConfig = {
       show:            false,
       showAddress:     false,
       addressIcon:     true,
-      addressColor:    "rgba(245,230,200,0.7)",
+      addressColor:    "rgba(255,255,255,0.7)",
       showBadge:       false,
-      badgeBackground: "#F5E6C8",
-      badgeColor:      "#0a2e20",
+      badgeBackground: "#F5C518",
+      badgeColor:      "#1a5c3a",
     },
 
     showBigMenu: true,
@@ -129,7 +130,7 @@ const defaultConfig: RestaurantConfig = {
     gridMinWidth: 150,
   },
 
-  // ── i18n par défaut ───────────────────────────────────────────
+  // ── i18n par défaut ──────────────────────────────────────────
   // Pas de heroTitleLines ici : le titre est en mode "big-editorial"
   // et ne nécessite pas de traduction.
   i18n: {

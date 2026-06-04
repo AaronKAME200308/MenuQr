@@ -48,19 +48,20 @@ export default function LanguagePicker({ lang, availableLangs, setLang, colors }
           gap: 5,
           padding: "7px 11px 7px 9px",
           borderRadius: 999,
-          border: `1.5px solid ${colors.primary}22`,
-          background: open ? `${colors.primary}14` : `${colors.primary}09`,
+          border: `1.5px solid ${open ? colors.accent + "45" : colors.accent + "22"}`,
+          background: open ? `${colors.accent}0e` : colors.bg,
           cursor: "pointer",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
-          transition: "background 0.2s",
+          transition: "background 0.2s, border-color 0.2s",
+          boxShadow: `0 1px 4px ${colors.accent}08`,
         }}
       >
         <span style={{ fontSize: 15, lineHeight: 1 }}>{current.flag}</span>
         <span style={{
           fontSize: 10,
           fontWeight: 700,
-          color: `${colors.primary}90`,
+          color: colors.accent,
           letterSpacing: "0.08em",
           fontFamily: "sans-serif",
           textTransform: "uppercase",
@@ -72,7 +73,7 @@ export default function LanguagePicker({ lang, availableLangs, setLang, colors }
           transition={{ duration: 0.22 }}
           style={{ display: "flex", alignItems: "center" }}
         >
-          <ChevronDown size={11} color={`${colors.primary}60`} />
+          <ChevronDown size={11} color={`${colors.accent}70`} />
         </motion.span>
       </motion.button>
 
@@ -90,11 +91,11 @@ export default function LanguagePicker({ lang, availableLangs, setLang, colors }
               right: 0,
               minWidth: 148,
               borderRadius: 16,
-              background: `${colors.bg}f2`,
-              border: `1.5px solid ${colors.primary}14`,
+              background: colors.bg,
+              border: `1.5px solid ${colors.accent}14`,
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
-              boxShadow: `0 16px 40px rgba(0,0,0,0.35), 0 4px 12px rgba(0,0,0,0.15)`,
+              boxShadow: `0 16px 40px ${colors.accent}14, 0 4px 12px ${colors.accent}0a`,
               overflow: "hidden",
               zIndex: 100,
             }}
@@ -107,7 +108,7 @@ export default function LanguagePicker({ lang, availableLangs, setLang, colors }
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.04 }}
-                  whileHover={{ background: `${colors.primary}12` }}
+                  whileHover={{ background: `${colors.accent}0c` }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => { setLang(l.code); setOpen(false); }}
                   style={{
@@ -117,24 +118,24 @@ export default function LanguagePicker({ lang, availableLangs, setLang, colors }
                     width: "100%",
                     padding: "11px 14px",
                     border: "none",
-                    background: isActive ? `${colors.primary}10` : "transparent",
+                    background: isActive ? `${colors.accent}08` : "transparent",
                     cursor: "pointer",
-                    borderBottom: idx < availableLangs.length - 1 ? `1px solid ${colors.primary}08` : "none",
+                    borderBottom: idx < availableLangs.length - 1 ? `1px solid ${colors.accent}08` : "none",
                   }}
                 >
                   <span style={{ fontSize: 18 }}>{l.flag}</span>
                   <div style={{ textAlign: "left" }}>
-                    <p style={{ fontSize: 12, fontWeight: isActive ? 700 : 500, color: isActive ? colors.primary : `${colors.primary}70`, margin: 0, fontFamily: "sans-serif" }}>
+                    <p style={{ fontSize: 12, fontWeight: isActive ? 700 : 500, color: isActive ? colors.accent : `${colors.accent}65`, margin: 0, fontFamily: "sans-serif" }}>
                       {l.label}
                     </p>
-                    <p style={{ fontSize: 9, color: `${colors.primary}35`, margin: 0, fontFamily: "sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    <p style={{ fontSize: 9, color: `${colors.accent}38`, margin: 0, fontFamily: "sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                       {l.code}
                     </p>
                   </div>
                   {isActive && (
                     <motion.div
                       layoutId="lang-check"
-                      style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: colors.primary }}
+                      style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: colors.accent }}
                     />
                   )}
                 </motion.button>

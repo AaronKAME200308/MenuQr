@@ -46,11 +46,11 @@ export default function StickyBar({
         position: "sticky",
         top: 0,
         zIndex: 20,
-        background: `${colors.bg}d0`,
+        background: `${colors.bg}eb`,
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        borderBottom: `1px solid ${colors.primary}10`,
-        boxShadow: `0 4px 24px ${colors.bg}80`,
+        borderBottom: `1px solid ${colors.accent}18`,
+        boxShadow: `0 4px 24px ${colors.accent}0a`,
       }}
     >
       {/* Ligne du haut : SearchBar + LanguagePicker */}

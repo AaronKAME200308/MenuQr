@@ -58,8 +58,10 @@ interface FunSocialsProps {
   restaurant:   Restaurant;
   colors:       Colors;
   config:       RestaurantConfig;
-  /** Label de section déjà traduit par MenuPage */
+  /** Labels déjà traduits par MenuPage */
   sectionLabel: string;
+  labelPhone:   string;
+  labelMail:    string;
 }
 
 interface SocialLink {
@@ -80,6 +82,8 @@ const FunSocials: FC<FunSocialsProps> = ({
   colors,
   config,
   sectionLabel,
+  labelPhone,
+  labelMail,
 }) => {
   const { layout, gridMinWidth } = config.socials;
 
@@ -94,7 +98,7 @@ const FunSocials: FC<FunSocialsProps> = ({
     ...(restaurant.phone
       ? [{
           key:   "phone",
-          label: "Appeler",
+          label: labelPhone,
           emoji: "📞",
           bg:    "#555555",
           Icon:  Phone,
@@ -104,7 +108,7 @@ const FunSocials: FC<FunSocialsProps> = ({
     ...(restaurant.mail
       ? [{
           key:   "mail",
-          label: "Email",
+          label: labelMail,
           emoji: "✉️",
           bg:    "#555555",
           Icon:  Mail,

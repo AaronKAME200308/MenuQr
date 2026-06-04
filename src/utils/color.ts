@@ -9,6 +9,7 @@ export const DEFAULT_COLORS: Colors = {
   primary: "#F5E6C8",
   accent:  "#1a5c3a",
   card:    "#0d3d28",
+  main:    "#F5E6C8",
 };
 
 export function buildColors(restaurant: Restaurant | null): Colors {
@@ -17,5 +18,6 @@ export function buildColors(restaurant: Restaurant | null): Colors {
     primary: restaurant?.color_primary ?? DEFAULT_COLORS.primary,
     accent:  restaurant?.color_accent  ?? DEFAULT_COLORS.accent,
     card:    restaurant?.color_card    ?? DEFAULT_COLORS.card,
+    main:    restaurant?.color_main    ?? DEFAULT_COLORS.main,
   };
 }

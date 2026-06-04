@@ -31,15 +31,15 @@ export default function SearchBar({
     : `${resultCount} résultat${resultCount !== 1 ? "s" : ""}`;
 
   return (
-    <div style={{ position: "relative", display: "flex", alignItems: "center", background: "rgba(255,255,255,0.07)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: `1.5px solid ${query ? colors.primary + "40" : colors.primary + "18"}`, borderRadius: 16, padding: "0 14px", transition: "border-color 0.25s", boxShadow: query ? `0 4px 20px ${colors.accent}25` : "none" }}>
-      <Search size={15} color={`${colors.primary}55`} style={{ flexShrink: 0 }} />
+    <div style={{ position: "relative", display: "flex", alignItems: "center", background: colors.bg, border: `1.5px solid ${query ? colors.accent + "55" : colors.accent + "22"}`, borderRadius: 16, padding: "0 14px", transition: "border-color 0.25s", boxShadow: query ? `0 4px 20px ${colors.accent}12` : `0 1px 4px ${colors.accent}08` }}>
+      <Search size={15} color={`${colors.accent}70`} style={{ flexShrink: 0 }} />
       <input
         ref={inputRef}
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
-        style={{ flex: 1, background: "transparent", border: "none", outline: "none", padding: "13px 10px", fontSize: 13, color: colors.primary, fontFamily: "sans-serif" }}
+        style={{ flex: 1, background: "transparent", border: "none", outline: "none", padding: "13px 10px", fontSize: 13, color: colors.accent, fontFamily: "sans-serif" }}
       />
       <AnimatePresence>
         {query && (
@@ -49,7 +49,7 @@ export default function SearchBar({
             exit={{ opacity: 0, scale: 0.7 }}
             style={{ display: "flex", alignItems: "center", gap: 8 }}
           >
-            <span style={{ fontSize: 10, fontWeight: 700, color: colors.accent, background: `${colors.accent}20`, borderRadius: 999, padding: "2px 8px", fontFamily: "sans-serif", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: colors.accent, background: `${colors.accent}30`, borderRadius: 999, padding: "2px 8px", fontFamily: "sans-serif", whiteSpace: "nowrap" }}>
               {countLabel}
             </span>
             <motion.button
@@ -57,7 +57,7 @@ export default function SearchBar({
               onClick={() => { setQuery(""); inputRef.current?.focus(); }}
               style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 4 }}
             >
-              <X size={14} color={`${colors.primary}60`} />
+              <X size={14} color={`${colors.accent}55`} />
             </motion.button>
           </motion.div>
         )}
