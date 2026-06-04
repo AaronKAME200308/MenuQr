@@ -338,7 +338,7 @@ export default function MenuPage({ slug }: MenuPageProps) {
           />
 
           {/* ── Liste des plats ────────────────────────────────── */}
-          <main style={{ paddingBottom: 32, paddingTop: 8, overflow: "visible" }}>
+          <main style={{ paddingBottom: 32, paddingTop: 8, overflow: "visible", background:"transparent", backdropFilter: "blur(2px)" }}>
             <AnimatePresence>
               {filteredCats.length === 0 ? (
                 <motion.div
