@@ -1,7 +1,4 @@
-// alloco.ts — v4
-// defaultLanguage = "de" : allemand par défaut pour Alloco.
-// supportedLanguages défini ici pour affichage immédiat du picker
-// (la BD arrive de manière asynchrone — trop tard pour le premier rendu).
+// alloco.ts — v5 (useImage)
 
 import type { PartialRestaurantConfig } from "../components/types";
 
@@ -24,8 +21,17 @@ const allocoConfig: PartialRestaurantConfig = {
     parallax:  false,
 
     background: {
-      type:           "solid",
-      color:          "#2E7D32",
+      type:    "solid",
+      color:   "#2E7D32",         // fallback si l'image ne charge pas
+
+      // ── Image de fond ───────────────────────────────────────
+      // Mettre useImage: false pour revenir au fond vert uni
+      useImage:      true,
+      imageUrl:      "https://hftyamydnjezbyfmsctx.supabase.co/storage/v1/object/public/Images/alloco/banner_alloco1.png",
+      imageOverlay:  "rgba(46, 125, 50, 0.55)",
+      imagePosition: "center",
+      // ────────────────────────────────────────────────────────
+
       pattern:        "dots",
       patternColor:   "#ffffff",
       patternOpacity: 0.07,
@@ -123,19 +129,8 @@ const allocoConfig: PartialRestaurantConfig = {
     sectionLabel: "🌍 Rejoins la communauté Alloco",
     layout:       "grid",
     gridMinWidth: 150,
-    
   },
 
-
-  // ── i18n ────────────────────────────────────────────────────
-  // defaultLanguage et supportedLanguages DOIVENT être définis ici
-  // pour que le LanguagePicker s'affiche dès le premier rendu.
-  // Sans ça, le hook tombe sur le fallback ["fr"] du default.ts
-  // et le picker reste caché (1 seule langue détectée).
-  //
-  // La BD (restaurant.default_language / supported_languages) peut
-  // encore agir si userOverride = false, mais pour Alloco on fixe
-  // explicitement "de" comme langue d'ouverture.
   i18n: {
     defaultLanguage:    "de",
     supportedLanguages: ["de", "fr", "en"],

@@ -1,6 +1,4 @@
-// DynamicHero.tsx — v3 (i18n complet)
-// Reçoit une prop i18n avec TOUS les textes déjà résolus par MenuPage.
-// Le composant reste pur : aucune logique de langue interne.
+// DynamicHero.tsx — v4 (useImage support)
 
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -18,21 +16,12 @@ import type {
   SupportedLang,
 } from "./types";
 
-// ─────────────────────────────────────────────────────────────
-// Prop i18n — tous les textes traduits par le parent
-// ─────────────────────────────────────────────────────────────
-
 export interface DynamicHeroI18n {
-  lang:        SupportedLang;
-  /** Lignes du titre stacked, déjà traduites */
-  titleLines:  string[];
-  /** Badge footer, déjà traduit */
-  badgeText:   string;
-  /** Tagline, déjà traduit depuis BD */
-  tagline:     string;
-  /** Adresse, déjà traduite depuis BD */
-  address:     string;
-  /** Nom du restaurant, déjà traduit depuis BD */
+  lang:           SupportedLang;
+  titleLines:     string[];
+  badgeText:      string;
+  tagline:        string;
+  address:        string;
   restaurantName: string;
 }
 
@@ -41,6 +30,16 @@ export interface DynamicHeroI18n {
 // ─────────────────────────────────────────────────────────────
 
 function buildBackground(bg: HeroBackground): React.CSSProperties {
+  // useImage : priorité absolue sur type
+  if (bg.useImage && bg.imageUrl) {
+    return {
+      backgroundImage:    `url(${bg.imageUrl})`,
+      backgroundSize:     "cover",
+      backgroundPosition: bg.imagePosition ?? "center",
+      // color = fallback CSS si l'image ne charge pas
+      backgroundColor:    bg.color ?? "#000",
+    };
+  }
   if (bg.type === "gradient" && bg.gradient) {
     const stops = bg.gradient.stops.map(s => `${s.color} ${s.pos}%`).join(", ");
     return { background: `linear-gradient(${bg.gradient.angle ?? 160}deg, ${stops})` };
@@ -110,46 +109,24 @@ function LogoBlock({ z, restaurant }: { z: HeroLogo; restaurant: Restaurant }) {
   if (!z.show) return null;
   const size = z.size ?? 50;
   const src  = z.src ?? restaurant.logo_url;
-  const pulseMargin = z.pulse ? 12 : 0; // ← espace pour l'anneau
+  const pulseMargin = z.pulse ? 12 : 0;
   const shapeStyle: React.CSSProperties =
     z.shape === "circle" ? { borderRadius: "50%" } :
     z.shape === "square" ? { borderRadius: 12 }    : {};
 
   return (
-    // Wrapper agrandi pour ne pas couper le pulse-ring
-    <div style={{
-      position: "relative",
-      width:  size + pulseMargin * 2,
-      height: size + pulseMargin * 2,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }}>
+    <div style={{ position: "relative", width: size + pulseMargin * 2, height: size + pulseMargin * 2, display: "flex", alignItems: "center", justifyContent: "center" }}>
       {z.pulse && (
-        <div style={{
-          position: "absolute",
-          inset: 0,
-          borderRadius: z.shape === "circle" ? "50%" : 16,
-          border: `2px solid ${z.pulseColor ?? "#fff"}50`,
-          animation: "pulse-ring 2.4s ease-out infinite",
-        }} />
+        <div style={{ position: "absolute", inset: 0, borderRadius: z.shape === "circle" ? "50%" : 16, border: `2px solid ${z.pulseColor ?? "#fff"}50`, animation: "pulse-ring 2.4s ease-out infinite" }} />
       )}
       <motion.div
         initial={{ scale: 0.7, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.15, type: "spring", stiffness: 260, damping: 20 }}
-        style={{
-          width: size, height: size,
-          border: `2px solid ${z.borderColor ?? "transparent"}`,
-          background: z.background ?? "transparent",
-          backdropFilter: "blur(12px)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          overflow: "hidden",
-          ...shapeStyle,
-        }}
+        style={{ width: size, height: size, border: `2px solid ${z.borderColor ?? "transparent"}`, background: z.background ?? "transparent", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", ...shapeStyle }}
       >
         {src
-          ? <img src={src} alt="logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} /> // ← contain au lieu de cover
+          ? <img src={src} alt="logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
           : <span style={{ fontSize: size * 0.44 }}>{z.fallbackEmoji ?? "🍽️"}</span>
         }
       </motion.div>
@@ -157,18 +134,7 @@ function LogoBlock({ z, restaurant }: { z: HeroLogo; restaurant: Restaurant }) {
   );
 }
 
-// TitleBlock reçoit les lignes déjà traduites via i18n.titleLines
-function TitleBlock({
-  z,
-  restaurant,
-  resolvedLines,
-  resolvedRestaurantName,
-}: {
-  z:                     HeroTitle;
-  restaurant:            Restaurant;
-  resolvedLines:         string[];
-  resolvedRestaurantName: string;
-}) {
+function TitleBlock({ z, restaurant, resolvedLines, resolvedRestaurantName }: { z: HeroTitle; restaurant: Restaurant; resolvedLines: string[]; resolvedRestaurantName: string }) {
   if (!z.show) return null;
   const style: React.CSSProperties = {
     fontSize:      z.fontSize      ?? "clamp(40px,12vw,80px)",
@@ -180,67 +146,32 @@ function TitleBlock({
     textShadow:    z.textShadow    ?? "none",
     textTransform: z.uppercase ? "uppercase" : "none",
     textAlign:     (z.align ?? "center") as React.CSSProperties["textAlign"],
-    margin: 0,
-    wordBreak: "break-word",
-    overflow: "hidden",
+    margin: 0, wordBreak: "break-word", overflow: "hidden",
   };
-
   let content: React.ReactNode;
   switch (z.mode) {
-    case "big-editorial":
-      content = <><span>ME</span><br /><span>NU</span></>;
-      break;
-    case "custom":
-      content = <>{z.customText}</>;
-      break;
+    case "big-editorial": content = <><span>ME</span><br /><span>NU</span></>; break;
+    case "custom":        content = <>{z.customText}</>; break;
     case "stacked": {
-      // Lignes traduites en priorité, fallback sur stackedLines statiques
       const lines = resolvedLines.length > 0 ? resolvedLines : (z.stackedLines ?? []);
       content = <>{lines.map((l, i) => <span key={i}>{l}<br /></span>)}</>;
       break;
     }
     case "restaurant-name":
-    default:
-      // Utilise le nom traduit depuis la BD
-      content = <>{resolvedRestaurantName}</>;
+    default: content = <>{resolvedRestaurantName}</>;
   }
-
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -16 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.12, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      style={style}
-    >
+    <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.12, duration: 0.55, ease: [0.22, 1, 0.36, 1] }} style={style}>
       {content}
     </motion.div>
   );
 }
 
-// SubtitleBlock — affiche le nom traduit si z.text est absent
-function SubtitleBlock({
-  z,
-  resolvedRestaurantName,
-}: {
-  z:                     HeroSubtitle;
-  resolvedRestaurantName: string;
-}) {
+function SubtitleBlock({ z, resolvedRestaurantName }: { z: HeroSubtitle; resolvedRestaurantName: string }) {
   if (!z.show) return null;
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.22, duration: 0.45 }}
-      style={{
-        fontSize:      z.fontSize      ?? "clamp(14px,4vw,20px)",
-        fontFamily:    z.fontFamily    ?? "serif",
-        color:         z.color         ?? "rgba(255,255,255,0.9)",
-        letterSpacing: z.letterSpacing ?? "0.15em",
-        fontStyle:     z.fontStyle     ?? "normal",
-        marginTop: 8,
-      }}
-    >
-      {/* Override statique prioritaire, sinon nom traduit depuis BD */}
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.45 }}
+      style={{ fontSize: z.fontSize ?? "clamp(14px,4vw,20px)", fontFamily: z.fontFamily ?? "serif", color: z.color ?? "rgba(255,255,255,0.9)", letterSpacing: z.letterSpacing ?? "0.15em", fontStyle: z.fontStyle ?? "normal", marginTop: 8 }}>
       {z.text ?? resolvedRestaurantName}
     </motion.div>
   );
@@ -255,8 +186,7 @@ function DividerBlock({ z }: { z: HeroDivider }) {
     </motion.div>
   );
   if (z.style === "dots") return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-      style={{ margin: "12px 0", display: "flex", gap: 6 }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} style={{ margin: "12px 0", display: "flex", gap: 6 }}>
       {[0, 1, 2].map(i => <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: z.color ?? "rgba(255,255,255,0.4)" }} />)}
     </motion.div>
   );
@@ -266,64 +196,23 @@ function DividerBlock({ z }: { z: HeroDivider }) {
   );
 }
 
-// TaglineBlock — affiche le tagline traduit depuis BD (ou override statique)
-function TaglineBlock({
-  z,
-  resolvedTagline,
-}: {
-  z:               HeroTagline;
-  resolvedTagline: string;
-}) {
+function TaglineBlock({ z, resolvedTagline }: { z: HeroTagline; resolvedTagline: string }) {
   if (!z.show) return null;
-  // z.text = override statique dans la config resto (rare)
   const text = z.text ?? resolvedTagline;
   if (!text) return null;
   return (
-    <motion.p
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.35 }}
-      style={{
-        fontSize:      z.fontSize      ?? "11px",
-        letterSpacing: z.letterSpacing ?? "0.12em",
-        color:         z.color         ?? "rgba(255,255,255,0.6)",
-        fontFamily:    z.fontFamily    ?? "sans-serif",
-        fontStyle:     z.fontStyle     ?? "normal",
-        margin: 0,
-      }}
-    >
+    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
+      style={{ fontSize: z.fontSize ?? "11px", letterSpacing: z.letterSpacing ?? "0.12em", color: z.color ?? "rgba(255,255,255,0.6)", fontFamily: z.fontFamily ?? "sans-serif", fontStyle: z.fontStyle ?? "normal", margin: 0 }}>
       {text}
     </motion.p>
   );
 }
 
-// FooterBand — address et badgeText déjà traduits par le parent
-function FooterBand({
-  z,
-  resolvedAddress,
-  resolvedBadgeText,
-}: {
-  z:                 HeroFooterBand;
-  resolvedAddress:   string;
-  resolvedBadgeText: string;
-}) {
+function FooterBand({ z, resolvedAddress, resolvedBadgeText }: { z: HeroFooterBand; resolvedAddress: string; resolvedBadgeText: string }) {
   if (!z.show) return null;
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.45 }}
-      style={{
-        position: "absolute", bottom: 0, left: 0, right: 0,
-        background:   z.background ?? "transparent",
-        paddingTop:   z.paddingY   ?? 12,
-        paddingBottom: z.paddingY  ?? 12,
-        paddingLeft:  24,
-        paddingRight: 24,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        gap: 8, zIndex: 3,
-      }}
-    >
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
+      style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: z.background ?? "transparent", paddingTop: z.paddingY ?? 12, paddingBottom: z.paddingY ?? 12, paddingLeft: 24, paddingRight: 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, zIndex: 3 }}>
       {z.showAddress && resolvedAddress && (
         <p style={{ fontSize: 11, color: z.addressColor ?? "rgba(255,255,255,0.7)", margin: 0, display: "flex", alignItems: "center", gap: 4 }}>
           {z.addressIcon && <MapPin size={10} />}{resolvedAddress}
@@ -342,96 +231,24 @@ function FooterBand({
 // Layouts
 // ─────────────────────────────────────────────────────────────
 
-type LayoutProps = {
-  h:          RestaurantConfig["header"];
-  restaurant: Restaurant;
-  i18n:       DynamicHeroI18n;
-};
+type LayoutProps = { h: RestaurantConfig["header"]; restaurant: Restaurant; i18n: DynamicHeroI18n };
 
 function BannerLayout({ h, restaurant, i18n }: LayoutProps) {
   return (
-    <div style={{
-      position: "relative", zIndex: 2, flex: 1,
-      display: "flex",
-      flexDirection: "column",
-      padding: `10px ${h.paddingX ?? "24px"}`,
-      boxSizing: "border-box",
-      width: "100%",
-      overflow: "hidden",
-      gap: 8,
-    }}>
-
-      {/* ── Ligne 1 : Titre pleine largeur en haut ── */}
-      <TitleBlock
-        z={{
-          ...h.title,
-          fontSize: h.title.fontSize ?? "clamp(22px, 6vw, 48px)",
-          align: "left",
-        }}
-        restaurant={restaurant}
-        resolvedLines={i18n.titleLines}
-        resolvedRestaurantName={i18n.restaurantName}
-      />
-
-      {/* ── Ligne 2 : Subtitle à gauche / Logo à droite ── */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "60% 40%",
-        alignItems: "center",
-        gap: 0,
-        width: "100%",
-      }}>
-
-        {/* Colonne gauche : subtitle + divider + tagline */}
-        <div style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          gap: 0,
-          minWidth: 0,
-          overflow: "hidden",
-        }}>
-          <SubtitleBlock
-            z={{
-              ...h.subtitle,
-              fontSize: h.subtitle.fontSize ?? "clamp(11px, 3vw, 15px)",
-            }}
-            resolvedRestaurantName={i18n.restaurantName}
-          />
+    <div style={{ position: "relative", zIndex: 2, flex: 1, display: "flex", flexDirection: "column", padding: `10px ${h.paddingX ?? "24px"}`, boxSizing: "border-box", width: "100%", overflow: "hidden", gap: 8 }}>
+      <TitleBlock z={{ ...h.title, fontSize: h.title.fontSize ?? "clamp(22px, 6vw, 48px)", align: "left" }} restaurant={restaurant} resolvedLines={i18n.titleLines} resolvedRestaurantName={i18n.restaurantName} />
+      <div style={{ display: "grid", gridTemplateColumns: "60% 40%", alignItems: "center", gap: 0, width: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 0, minWidth: 0, overflow: "hidden" }}>
+          <SubtitleBlock z={{ ...h.subtitle, fontSize: h.subtitle.fontSize ?? "clamp(11px, 3vw, 15px)" }} resolvedRestaurantName={i18n.restaurantName} />
           <DividerBlock z={h.divider} />
-          <TaglineBlock
-            z={{
-              ...h.tagline,
-              fontSize: h.tagline.fontSize ?? "10px",
-            }}
-            resolvedTagline={i18n.tagline}
-          />
+          <TaglineBlock z={{ ...h.tagline, fontSize: h.tagline.fontSize ?? "10px" }} resolvedTagline={i18n.tagline} />
         </div>
-
-        {/* Colonne droite : logo */}
-        {h.logo.show
-          ? (
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              width: "100%",
-              boxSizing: "border-box",
-              paddingRight: 12, 
-            }}>
-              <LogoBlock
-                z={{
-                  ...h.logo,
-                  size: Math.min(h.logo.size ?? 50, Math.round(window.innerWidth * 0.40 * 0.8)),
-                }}
-                restaurant={restaurant}
-              />
-            </div>
-          )
-          : <div />
-        }
+        {h.logo.show ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", width: "100%", boxSizing: "border-box", paddingRight: 12 }}>
+            <LogoBlock z={{ ...h.logo, size: Math.min(h.logo.size ?? 50, Math.round(window.innerWidth * 0.40 * 0.8)) }} restaurant={restaurant} />
+          </div>
+        ) : <div />}
       </div>
-
     </div>
   );
 }
@@ -439,22 +256,9 @@ function BannerLayout({ h, restaurant, i18n }: LayoutProps) {
 function VerticalLayout({ h, restaurant, i18n }: LayoutProps) {
   const isLeft = h.align === "left";
   return (
-    <div style={{
-      position: "relative", zIndex: 2, flex: 1,
-      display: "flex", flexDirection: "column",
-      alignItems: isLeft ? "flex-start" : "center",
-      justifyContent: "center",
-      textAlign: (h.align ?? "center") as React.CSSProperties["textAlign"],
-      padding: `clamp(48px,10vw,80px) ${h.paddingX ?? "24px"} 80px`,
-      gap: 0,
-    }}>
+    <div style={{ position: "relative", zIndex: 2, flex: 1, display: "flex", flexDirection: "column", alignItems: isLeft ? "flex-start" : "center", justifyContent: "center", textAlign: (h.align ?? "center") as React.CSSProperties["textAlign"], padding: `clamp(48px,10vw,80px) ${h.paddingX ?? "24px"} 80px`, gap: 0 }}>
       <LogoBlock z={h.logo} restaurant={restaurant} />
-      <TitleBlock
-        z={h.title}
-        restaurant={restaurant}
-        resolvedLines={i18n.titleLines}
-        resolvedRestaurantName={i18n.restaurantName}
-      />
+      <TitleBlock z={h.title} restaurant={restaurant} resolvedLines={i18n.titleLines} resolvedRestaurantName={i18n.restaurantName} />
       <SubtitleBlock z={h.subtitle} resolvedRestaurantName={i18n.restaurantName} />
       <DividerBlock  z={h.divider} />
       <TaglineBlock  z={h.tagline} resolvedTagline={i18n.tagline} />
@@ -466,11 +270,7 @@ function VerticalLayout({ h, restaurant, i18n }: LayoutProps) {
 // Composant principal
 // ─────────────────────────────────────────────────────────────
 
-type Props = {
-  restaurant: Restaurant;
-  config:     RestaurantConfig;
-  i18n:       DynamicHeroI18n;
-};
+type Props = { restaurant: Restaurant; config: RestaurantConfig; i18n: DynamicHeroI18n };
 
 export default function DynamicHero({ restaurant, config, i18n }: Props) {
   const { header: h } = config;
@@ -482,13 +282,16 @@ export default function DynamicHero({ restaurant, config, i18n }: Props) {
   const isBanner = h.layout === "banner";
 
   const containerStyle: React.CSSProperties = {
-    position: "relative",
-    overflow: "hidden",
+    position:  "relative",
+    overflow:  "hidden",
     minHeight: h.minHeight ?? (isBanner ? "260px" : "100svh"),
-    display: "flex",
+    display:   "flex",
     flexDirection: "column",
     ...buildBackground(h.background),
   };
+
+  // Overlay actif si useImage + imageOverlay défini
+  const showOverlay = h.background.useImage && h.background.imageOverlay;
 
   return (
     <motion.header
@@ -498,7 +301,8 @@ export default function DynamicHero({ restaurant, config, i18n }: Props) {
       <ShapeLayer   bg={h.background} />
       <PatternLayer bg={h.background} clip={!!h.background.shape && h.background.shape !== "none"} />
 
-      {h.background.type === "image" && h.background.imageOverlay && (
+      {/* Overlay image — fonctionne avec useImage ET avec type:"image" legacy */}
+      {(showOverlay || (h.background.type === "image" && h.background.imageOverlay)) && (
         <div aria-hidden style={{ position: "absolute", inset: 0, background: h.background.imageOverlay, zIndex: 1 }} />
       )}
 
@@ -507,11 +311,7 @@ export default function DynamicHero({ restaurant, config, i18n }: Props) {
         : <VerticalLayout h={h} restaurant={restaurant} i18n={i18n} />
       }
 
-      <FooterBand
-        z={h.footer}
-        resolvedAddress={i18n.address}
-        resolvedBadgeText={i18n.badgeText}
-      />
+      <FooterBand z={h.footer} resolvedAddress={i18n.address} resolvedBadgeText={i18n.badgeText} />
 
       <style>{`
         @keyframes pulse-ring {

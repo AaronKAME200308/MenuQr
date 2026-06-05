@@ -142,9 +142,14 @@ export interface BackgroundConfig {
 export interface HeroBackground {
   color: string;
   type: "solid" | "gradient" | "image";
-  gradient?: { angle?: number; stops: { color: string; pos: number }[] };
+  /** Active le fond image (priorité sur type) */
+  useImage?: boolean;
   imageUrl?: string;
+  /** Overlay semi-transparent sur l'image ex: "rgba(0,0,0,0.45)" */
   imageOverlay?: string;
+  /** Position de l'image — défaut "center" */
+  imagePosition?: string;
+  gradient?: { angle?: number; stops: { color: string; pos: number }[] };
   pattern?: "dots" | "lines" | "diamonds" | "none";
   patternColor?: string;
   patternOpacity?: number;
