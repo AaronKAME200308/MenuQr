@@ -1,8 +1,8 @@
-// components/ItemCard.tsx — v2 (typages stricts)
+// components/ItemCard.tsx — v3 (promotions)
 
 import { motion, useAnimationControls } from "framer-motion";
 import { useEffect }                    from "react";
-import { Star, Flame, Sparkles, Leaf }  from "lucide-react";
+import { Star, Flame, Sparkles, Leaf, Tag }  from "lucide-react";
 import type { FC }                      from "react";
 import type { MenuItem, Colors }        from "./types";
 
@@ -15,6 +15,11 @@ export function fmt(price: number, currency = "XAF"): string {
     style:    "currency",
     currency,
   }).format(price);
+}
+
+/** Calcule le prix après promotion */
+export function promoPrice(price: number, pct: number): number {
+  return Math.round(price * (1 - pct / 100) * 100) / 100;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -55,6 +60,46 @@ export const DishBadge: FC<DishBadgeProps> = ({ item, labelBestseller, labelPopu
   );
   return null;
 };
+
+// ─────────────────────────────────────────────────────────────
+// PromoBadge — coin bas-gauche de la carte
+// ─────────────────────────────────────────────────────────────
+
+interface PromoBadgeProps {
+  pct: number;
+}
+
+const PromoBadge: FC<PromoBadgeProps> = ({ pct }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.7, x: -6 }}
+    animate={{ opacity: 1, scale: 1,   x: 0  }}
+    transition={{ delay: 0.18, type: "spring", stiffness: 340, damping: 22 }}
+    style={{
+      position:      "absolute",
+      bottom:        -12,
+      left:          -4,
+      zIndex:        4,
+      pointerEvents: "none",
+    }}
+  >
+    <span style={{
+      display:       "inline-flex",
+      alignItems:    "center",
+      gap:           3,
+      background:    "linear-gradient(135deg, #e53935 0%, #ff5252 100%)",
+      color:         "#fff",
+      fontSize:      9,
+      fontWeight:    900,
+      padding:       "3px 7px 3px 5px",
+      borderRadius:  "0 8px 8px 0",
+      boxShadow:     "0 3px 10px rgba(229,57,53,0.40)",
+      letterSpacing: "-0.01em",
+    }}>
+      <Tag size={8} color="#fff" />
+      -{pct}%
+    </span>
+  </motion.div>
+);
 
 // ─────────────────────────────────────────────────────────────
 // FloatingImage
@@ -151,6 +196,11 @@ const ItemCard: FC<ItemCardProps> = ({
     }
   };
 
+  const hasPromo = item.promotion_active && (item.promotion ?? 0) > 0;
+  const discountedPrice = hasPromo
+    ? promoPrice(item.price, item.promotion!)
+    : null;
+
   return (
     <motion.div
       layout
@@ -169,21 +219,25 @@ const ItemCard: FC<ItemCardProps> = ({
       tabIndex={0}
       onKeyDown={handleKeyDown}
       style={{
-        width:               148,
-        display:             "flex",
-        flexDirection:       "column",
-        alignItems:          "center",
-        paddingTop:          OVERHANG,
-        marginTop:           OVERHANG,
-        background:          `${colors.accent}10`,
+        width:          148,
+        display:        "flex",
+        flexDirection:  "column",
+        alignItems:     "center",
+        paddingTop:     OVERHANG,
+        marginTop:      OVERHANG,
+        background:     `${colors.accent}10`,
         backdropFilter: "blur(12px)",
-        border:              `3px solid ${colors.accent}90`,
-        borderRadius:        20,
-        overflow:            "visible",
-        position:            "relative",
-        outline:             "none",
-        cursor:              "pointer",
-        boxShadow:           `0 4px 16px ${colors.accent}0c`,
+        border:         hasPromo
+          ? "3px solid rgba(229,57,53,0.55)"
+          : `3px solid ${colors.accent}90`,
+        borderRadius:   20,
+        overflow:       "visible",
+        position:       "relative",
+        outline:        "none",
+        cursor:         "pointer",
+        boxShadow:      hasPromo
+          ? "0 4px 16px rgba(229,57,53,0.12)"
+          : `0 4px 16px ${colors.accent}0c`,
       }}
     >
       {/* Image flottante */}
@@ -191,33 +245,36 @@ const ItemCard: FC<ItemCardProps> = ({
 
       {/* Numéro */}
       <div style={{
-        position:        "absolute",
-        top:             -OVERHANG + 4,
-        right:           10,
-        width:           20,
-        height:          20,
-        borderRadius:    "50%",
-        background:      colors.accent,
-        color:           colors.primary,
-        display:         "flex",
-        alignItems:      "center",
-        justifyContent:  "center",
-        fontSize:        8,
-        fontWeight:      800,
-        zIndex:          3,
+        position:       "absolute",
+        top:            -OVERHANG + 4,
+        right:          10,
+        width:          20,
+        height:         20,
+        borderRadius:   "50%",
+        background:     colors.accent,
+        color:          colors.primary,
+        display:        "flex",
+        alignItems:     "center",
+        justifyContent: "center",
+        fontSize:       8,
+        fontWeight:     800,
+        zIndex:         3,
       }}>
         {index + 1}
       </div>
 
+      {/* Badge promo bas-gauche */}
+      {hasPromo && <PromoBadge pct={item.promotion!} />}
+
       {/* Corps */}
       <div style={{
-        display:        "flex",
-        flexDirection:  "column",
-        alignItems:     "center",
-        gap:            4,
-        padding:        `${CIRCLE_SIZE / 2 - OVERHANG + 14}px 14px 16px`,
-        width:          "100%",
-        textAlign:      "center",
+        display:       "flex",
+        flexDirection: "column",
+        alignItems:    "center",
+        gap:           4,
+        padding:       `${CIRCLE_SIZE / 2 - OVERHANG + 14}px 14px ${hasPromo ? 28 : 16}px`,
+        width:         "100%",
+        textAlign:     "center",
       }}>
         <DishBadge
           item={item}
@@ -232,13 +289,13 @@ const ItemCard: FC<ItemCardProps> = ({
 
         {item.description && (
           <p style={{
-            fontSize:          10,
-            lineHeight:        1.5,
-            color:             `${colors.accent}90`,
-            display:           "-webkit-box",
-            WebkitLineClamp:   2,
-            WebkitBoxOrient:   "vertical",
-            overflow:          "hidden",
+            fontSize:        10,
+            lineHeight:      1.5,
+            color:           `${colors.accent}90`,
+            display:         "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow:        "hidden",
           } as React.CSSProperties}>
             {item.description}
           </p>
@@ -261,10 +318,43 @@ const ItemCard: FC<ItemCardProps> = ({
         {/* Séparateur */}
         <div style={{ width: 28, height: 1, background: `${colors.primary}12`, margin: "6px 0" }} />
 
+        {/* Prix */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-          <p style={{ fontSize: 15, fontWeight: 900, color: colors.primary, letterSpacing: "-0.02em" }}>
-            {fmt(item.price, item.currency)}
-          </p>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
+            {hasPromo ? (
+              <>
+                {/* Prix original barré */}
+                <span style={{
+                  fontSize:       10,
+                  fontWeight:     600,
+                  color:          `${colors.primary}45`,
+                  textDecoration: "line-through",
+                  letterSpacing:  "-0.01em",
+                }}>
+                  {fmt(item.price, item.currency)}
+                </span>
+                {/* Prix promoé */}
+                <motion.span
+                  initial={{ scale: 0.85 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                  style={{
+                    fontSize:     15,
+                    fontWeight:   900,
+                    color:        "#e53935",
+                    letterSpacing: "-0.02em",
+                    lineHeight:   1,
+                  }}
+                >
+                  {fmt(discountedPrice!, item.currency)}
+                </motion.span>
+              </>
+            ) : (
+              <p style={{ fontSize: 15, fontWeight: 900, color: colors.primary, letterSpacing: "-0.02em" }}>
+                {fmt(item.price, item.currency)}
+              </p>
+            )}
+          </div>
           <motion.span
             whileHover={{ x: 3 }}
             style={{ fontSize: 10, color: `${colors.accent}`, fontFamily: "sans-serif" }}

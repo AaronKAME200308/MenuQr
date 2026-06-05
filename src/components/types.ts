@@ -1,4 +1,4 @@
-// types.ts — v6 (i18n complet : name + tagline + address + hero)
+// types.ts — v7 (promotions)
 
 // ─────────────────────────────────────────────────────────────
 // Primitives
@@ -75,6 +75,14 @@ export interface MenuItem {
   variants?: Variant[];
   name_translations?:        Record<SupportedLang, string>;
   description_translations?: Record<SupportedLang, string>;
+  /** Promotion active ou non */
+  promotion_active?:              boolean;
+  /** Pourcentage de réduction (ex : 20 → -20%) */
+  promotion?:                     number;
+  /** Nom de la promotion dans la langue par défaut */
+  promotion_name?:                string;
+  /** Traductions du nom de la promotion */
+  promotion_name_translations?:   Record<SupportedLang, string>;
 }
 
 export interface Category {

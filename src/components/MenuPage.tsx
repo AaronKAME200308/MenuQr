@@ -191,13 +191,19 @@ export default function MenuPage({ slug }: MenuPageProps) {
   [categories, tField]);
 
   // ── Items avec name + description traduits ────────────────────
-  const translatedItems = useMemo<MenuItem[]>(() =>
-    items.map((item): MenuItem => ({
-      ...item,
-      name:        tField(item.name_translations,        item.name),
-      description: tField(item.description_translations, item.description ?? "") || undefined,
-    })),
-  [items, tField]);
+// Dans MenuPage.tsx — remplacer le useMemo translatedItems existant par ceci :
+
+const translatedItems = useMemo<MenuItem[]>(() =>
+  items.map((item): MenuItem => ({
+    ...item,
+    name:             tField(item.name_translations,        item.name),
+    description:      tField(item.description_translations, item.description ?? "") || undefined,
+    // Traduction du nom de la promotion
+    promotion_name:   item.promotion_name_translations
+      ? tField(item.promotion_name_translations, item.promotion_name ?? "")
+      : item.promotion_name,
+  })),
+[items, tField]);
 
   // ── Index : items par categorie ───────────────────────────────
   const itemsByCategory = useMemo<Record<string, MenuItem[]>>(() =>
