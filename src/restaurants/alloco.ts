@@ -135,9 +135,9 @@ const allocoConfig: PartialRestaurantConfig = {
     defaultLanguage:    "de",
     supportedLanguages: ["de", "fr", "en"],
     heroTitleLines: {
-      fr: ["Découvrez le style africain"],
-      en: ["Taste the African Vibes"],
-      de: ["Erlebe afrikanisches Flair"],
+      fr: ["Nous venons à vous, et les saveurs aussi."],
+      en: ["We're coming to you, and so are the flavors."],
+      de: ["Wir kommen zu euch, die Aromen auch"],
     },
     socialsLabel: {
       fr: "🌍 Rejoins la communauté Alloco",

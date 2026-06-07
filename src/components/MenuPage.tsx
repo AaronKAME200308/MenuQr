@@ -411,7 +411,7 @@ const translatedItems = useMemo<MenuItem[]>(() =>
             <p style={{ fontSize: 16, color: `${colors.primary}80`, fontFamily: "sans-serif" }}>
               {restaurant.address && (
                 <span style={{ color: `${colors.primary}` }}>
-                  {t("Address")} :{tField(restaurant.address_translations, restaurant.address)}<br />
+                  {t("Address")} : {tField(restaurant.address_translations, restaurant.address)}<br />
                 </span>
               )}
             </p>
