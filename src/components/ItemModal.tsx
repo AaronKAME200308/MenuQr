@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Leaf, Flame, Share2, Tag } from "lucide-react";
+import { ArrowLeft, Leaf, Flame, Share2, Tag, X, ZoomIn } from "lucide-react";
 import { fmt, promoPrice } from "./ItemCard";
 import type { MenuItem, Colors, TextConfig } from "./types";
 
@@ -33,14 +33,95 @@ function DragHandle() {
   );
 }
 
+// ─── Lightbox fullscreen ───────────────────────────────────
+
+function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      key="lightbox"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
+      onClick={onClose}
+      style={{
+        position:       "fixed",
+        inset:          0,
+        zIndex:         200,
+        background:     "rgba(0,0,0,0.92)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        display:        "flex",
+        alignItems:     "center",
+        justifyContent: "center",
+        padding:        24,
+      }}
+    >
+      {/* Bouton fermer */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.7 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.12 }}
+        onClick={onClose}
+        style={{
+          position:       "absolute",
+          top:            20,
+          right:          20,
+          width:          40,
+          height:         40,
+          borderRadius:   "50%",
+          background:     "rgba(255,255,255,0.12)",
+          border:         "1px solid rgba(255,255,255,0.2)",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          cursor:         "pointer",
+          zIndex:         201,
+        }}
+      >
+        <X size={18} color="#fff" />
+      </motion.button>
+
+      {/* Image */}
+      <motion.img
+        src={src}
+        alt={alt}
+        initial={{ scale: 0.82, opacity: 0 }}
+        animate={{ scale: 1,    opacity: 1 }}
+        exit={{ scale: 0.88,    opacity: 0 }}
+        transition={{ duration: 0.35, ease: [0.34, 1.2, 0.64, 1] }}
+        onClick={e => e.stopPropagation()}
+        style={{
+          maxWidth:     "100%",
+          maxHeight:    "88vh",
+          objectFit:    "contain",
+          borderRadius: 20,
+          boxShadow:    "0 32px 80px rgba(0,0,0,0.6)",
+        }}
+      />
+    </motion.div>
+  );
+}
+
 // ─── Image circulaire ──────────────────────────────────────
 
-function DishImage({ src, alt, accent, bg }: { src?: string; alt: string; accent: string; bg: string }) {
+function DishImage({ src, alt, accent, bg, onExpand }: { src?: string; alt: string; accent: string; bg: string; onExpand: () => void }) {
+  const [hovered, setHovered] = useState(false);
+
   return (
     <motion.div
       initial={{ scale: 0.82, opacity: 0, y: 12 }}
       animate={{ scale: 1,    opacity: 1, y: 0  }}
       transition={{ delay: 0.1, duration: 0.45, ease: [0.34, 1.3, 0.64, 1] }}
+      onClick={src ? onExpand : undefined}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         position:    "absolute",
         bottom:      -OVERHANG,
@@ -53,10 +134,29 @@ function DishImage({ src, alt, accent, bg }: { src?: string; alt: string; accent
         boxShadow:   `0 12px 40px rgba(0,0,0,0.22), 0 0 0 5px ${bg}, 0 0 0 9px ${accent}38`,
         zIndex:      10,
         background:  `${accent}18`,
+        cursor:      src ? "zoom-in" : "default",
       }}
     >
       {src ? (
-        <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        <>
+          <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.3s ease", transform: hovered ? "scale(1.07)" : "scale(1)" }} />
+          {/* Overlay zoom au hover */}
+          <motion.div
+            animate={{ opacity: hovered ? 1 : 0 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              position:       "absolute",
+              inset:          0,
+              background:     "rgba(0,0,0,0.35)",
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              borderRadius:   "50%",
+            }}
+          >
+            <ZoomIn size={24} color="#fff" />
+          </motion.div>
+        </>
       ) : (
         <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, background: `${bg}` }}>
           🍽️
@@ -162,8 +262,9 @@ type Props = {
 
 export default function ItemModal({ item, colors, onClose, text }: Props) {
   const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
+  const [lightboxOpen, setLightboxOpen]       = useState(false);
 
-  useEffect(() => { setSelectedVariant(null); }, [item?.id]);
+  useEffect(() => { setSelectedVariant(null); setLightboxOpen(false); }, [item?.id]);
 
   useEffect(() => {
     if (!item) return;
@@ -208,6 +309,16 @@ export default function ItemModal({ item, colors, onClose, text }: Props) {
           onClick={onClose}
           style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center", background: "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}
         >
+          {/* Lightbox */}
+          <AnimatePresence>
+            {lightboxOpen && item?.image_url && (
+              <Lightbox
+                src={item.image_url}
+                alt={item.name}
+                onClose={() => setLightboxOpen(false)}
+              />
+            )}
+          </AnimatePresence>
           {/* ── Bottom sheet ── */}
           <motion.div
             key="sheet"
@@ -275,7 +386,7 @@ export default function ItemModal({ item, colors, onClose, text }: Props) {
                 <PromoHeaderBadge pct={item.promotion!} name={item.promotion_name ?? ""} />
               )}
 
-              <DishImage src={item.image_url} alt={item.name} accent={accent} bg={colors.bg} />
+              <DishImage src={item.image_url} alt={item.name} accent={accent} bg={colors.bg} onExpand={() => setLightboxOpen(true)} />
             </div>
 
             {/* ══ SECTION BASSE ══ */}
