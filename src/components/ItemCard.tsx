@@ -327,7 +327,7 @@ const ItemCard: FC<ItemCardProps> = ({
                 <span style={{
                   fontSize:       10,
                   fontWeight:     600,
-                  color:          `${colors.primary}45`,
+                  color:          `${colors.primary}`,
                   textDecoration: "line-through",
                   letterSpacing:  "-0.01em",
                 }}>
@@ -364,7 +364,7 @@ const ItemCard: FC<ItemCardProps> = ({
         </div>
 
         {item.variants && item.variants.length > 0 && (
-          <p style={{ fontSize: 9, color: `${colors.primary}35`, fontFamily: "sans-serif" }}>
+          <p style={{ fontSize: 9, color: `${colors.primary}`, fontFamily: "sans-serif" }}>
             {item.variants.length} {labelTailles}
           </p>
         )}
