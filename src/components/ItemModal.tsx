@@ -413,7 +413,7 @@ export default function ItemModal({ item, colors, onClose, text }: Props) {
                         style={{ display: "flex", alignItems: "center", gap: 8 }}
                       >
                         <span style={{ fontSize: 30, fontWeight: 900, color: "#e53935", letterSpacing: "-0.04em", lineHeight: 1 }}>
-                          {fmt(displayPrice, displayCurrency)}
+                          {fmt(displayPrice, displayCurrency, text.offert)}
                         </span>
                         <span style={{ fontSize: 10, fontWeight: 800, background: "linear-gradient(135deg,#e53935,#ff5252)", color: "#fff", padding: "3px 8px", borderRadius: 99, boxShadow: "0 3px 10px rgba(229,57,53,0.35)" }}>
                           -{item.promotion}%

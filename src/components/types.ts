@@ -32,7 +32,8 @@ export interface TextConfig {
   description: string;
   disponible:  string;
   spicy:       string;
-  vegetarian:   string;
+  vegetarian:  string;
+  offert:      string;
 }
 
 // ─────────────────────────────────────────────────────────────

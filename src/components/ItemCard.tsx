@@ -10,7 +10,8 @@ import type { MenuItem, Colors }        from "./types";
 // Helpers
 // ─────────────────────────────────────────────────────────────
 
-export function fmt(price: number, currency = "XAF"): string {
+export function fmt(price: number, currency = "XAF", freeLabel?: string): string {
+  if (price === 0 && freeLabel) return freeLabel;
   return new Intl.NumberFormat("fr-FR", {
     style:    "currency",
     currency,
@@ -181,13 +182,14 @@ interface ItemCardProps {
   labelNew:        string;
   labelVegetarian: string;
   labelSpicy:      string;
+  labelOffert:     string;
 }
 
 const ItemCard: FC<ItemCardProps> = ({
   item, colors, index, onOpen,
   labelVoir, labelTailles,
   labelBestseller, labelPopular, labelNew,
-  labelVegetarian, labelSpicy,
+  labelVegetarian, labelSpicy, labelOffert,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
     if (e.key === "Enter" || e.key === " ") {
@@ -346,7 +348,7 @@ const ItemCard: FC<ItemCardProps> = ({
                     lineHeight:   1,
                   }}
                 >
-                  {fmt(discountedPrice!, item.currency)}
+                  {fmt(discountedPrice!, item.currency, labelOffert)}
                 </motion.span>
               </>
             ) : (

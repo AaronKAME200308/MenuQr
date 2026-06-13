@@ -138,6 +138,8 @@ export default function MenuPage({ slug }: MenuPageProps) {
         if (!cancelled) {
           setRestaurant(resto);
           setCategories(cats ?? []);
+          console.log("rawItems sample:", JSON.stringify(rawItems?.[0], null, 2));
+console.log("menuItems sample:", JSON.stringify(menuItems?.[0], null, 2));
           setItems(menuItems);
         }
       } catch (err: unknown) {
@@ -193,6 +195,7 @@ export default function MenuPage({ slug }: MenuPageProps) {
     disponible:  t("label_disponible"),
     vegetarian:  t("label_vegetarian"),
     spicy:       t("label_spicy"),
+    offert:      t("label_offert"),
   }), [t]);
 
   // ── Labels traduits pour les cartes ──────────────────────────
@@ -203,6 +206,7 @@ export default function MenuPage({ slug }: MenuPageProps) {
   const labelNew         = useMemo(() => t("label_new"),         [t]);
   const labelVegetarian  = useMemo(() => t("label_vegetarian"),  [t]);
   const labelSpicy       = useMemo(() => t("label_spicy"),       [t]);
+  const labelOffert      = useMemo(() => t("label_offert"),      [t]);
 
   // ── Labels traduits pour FunSocials ──────────────────────────
   const labelPhone       = useMemo(() => t("label_appeler"),     [t]);
@@ -404,6 +408,7 @@ export default function MenuPage({ slug }: MenuPageProps) {
                       labelNew={labelNew}
                       labelVegetarian={labelVegetarian}
                       labelSpicy={labelSpicy}
+                      labelOffert={labelOffert}
                     />
                   );
                 })

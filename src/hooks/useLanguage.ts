@@ -59,6 +59,7 @@ const UI_STRINGS: Record<string, UITranslations> = {
     label_popular:         "Populaire",
     label_new:             "Nouveau",
     all_categories:        "Tout",
+    label_offert:          "Offert",
   },
   en: {
     search_placeholder:    "Search a dish…",
@@ -88,6 +89,7 @@ const UI_STRINGS: Record<string, UITranslations> = {
     label_popular:         "Popular",
     label_new:             "New",
     all_categories:        "All",
+    label_offert:          "Free",
   },
   de: {
     search_placeholder:    "Gericht suchen…",
@@ -117,6 +119,7 @@ const UI_STRINGS: Record<string, UITranslations> = {
     label_popular:         "Beliebt",
     label_new:             "Neu",
     all_categories:        "Alle",
+    label_offert:          "Gratis",
   },
   ar: {
     search_placeholder:    "ابحث عن طبق…",
@@ -146,6 +149,7 @@ const UI_STRINGS: Record<string, UITranslations> = {
     label_popular:         "شائع",
     label_new:             "جديد",
     all_categories:        "الكل",
+    label_offert:          "مجاني",
   },
 };
 
