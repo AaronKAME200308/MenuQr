@@ -1,4 +1,5 @@
-// types.ts — v7 (promotions)
+// types.ts — v8 (N-à-N categories)
+// Changement : category_id: string → category_ids: string[]
 
 // ─────────────────────────────────────────────────────────────
 // Primitives
@@ -57,7 +58,12 @@ export type UITranslationMap = Record<SupportedLang, UITranslations>;
 export interface MenuItem {
   id: string;
   restaurant_id: string;
-  category_id: string;
+  /**
+   * Tableau des IDs de catégories auxquelles appartient cet item.
+   * Remplace l'ancien champ scalaire category_id (relation 1-N).
+   * Peuplé depuis menu_item_categories via la requête Supabase.
+   */
+  category_ids: string[];
   name: string;
   description?: string;
   price: number;

@@ -1,6 +1,8 @@
-// MenuPage.tsx — v6 (i18n complet, typages corrects)
-// Résout TOUTES les traductions ici et les distribue aux enfants via props.
-// Aucun enfant ne connaît la langue — ils reçoivent des strings prêts.
+// MenuPage.tsx — v7 (N-à-N categories)
+// Changements vs v6 :
+//   1. Requête Supabase : select avec join sur menu_item_categories
+//   2. Mapping des items bruts → category_ids: string[]
+//   3. itemsByCategory et filteredByCategory utilisent .includes() au lieu de ===
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { AnimatePresence, motion }                   from "framer-motion";
@@ -35,6 +37,15 @@ const supabase = createClient(
 );
 
 // ─────────────────────────────────────────────────────────────
+// Type intermédiaire : forme brute retournée par Supabase
+// avant normalisation en MenuItem
+// ─────────────────────────────────────────────────────────────
+
+interface RawMenuItem extends Omit<MenuItem, "category_ids"> {
+  menu_item_categories: { category_id: string }[];
+}
+
+// ─────────────────────────────────────────────────────────────
 // Props
 // ─────────────────────────────────────────────────────────────
 
@@ -63,9 +74,7 @@ export default function MenuPage({ slug }: MenuPageProps) {
   const openModal  = useCallback((item: MenuItem) => setSelectedItem(item), []);
   const closeModal = useCallback(() => setSelectedItem(null), []);
 
-  // ── i18n — initialisé avec restaurant null (avant fetch) ─────
-  // useLanguage lit restaurant.supported_languages / default_language
-  // dès que restaurant est chargé, via la dépendance réactive.
+  // ── i18n ─────────────────────────────────────────────────────
   const {
     lang,
     setLang,
@@ -99,19 +108,37 @@ export default function MenuPage({ slug }: MenuPageProps) {
           .returns<Category[]>();
         if (e2) throw e2;
 
-        const { data: menuItems, error: e3 } = await supabase
+        // ── CHANGEMENT v7 ──────────────────────────────────────
+        // On joint menu_item_categories pour récupérer tous les
+        // category_id liés à chaque item en une seule requête.
+        // Supabase retourne un tableau imbriqué :
+        //   menu_item_categories: [{ category_id: "uuid" }, ...]
+        const { data: rawItems, error: e3 } = await supabase
           .from("menu_items")
-          .select("*")
+          .select(`
+            *,
+            menu_item_categories ( category_id )
+          `)
           .eq("restaurant_id", resto.id)
           .eq("is_available", true)
           .order("sort_order")
-          .returns<MenuItem[]>();
+          .returns<RawMenuItem[]>();
         if (e3) throw e3;
+
+        // Normalisation : aplatir le tableau imbriqué en category_ids[]
+        const menuItems: MenuItem[] = (rawItems ?? []).map((raw) => {
+          const { menu_item_categories: mic, ...rest } = raw;
+          return {
+            ...rest,
+            category_ids: (mic ?? []).map((r) => r.category_id),
+          };
+        });
+        // ── FIN CHANGEMENT ─────────────────────────────────────
 
         if (!cancelled) {
           setRestaurant(resto);
-          setCategories(cats   ?? []);
-          setItems(menuItems   ?? []);
+          setCategories(cats ?? []);
+          setItems(menuItems);
         }
       } catch (err: unknown) {
         if (!cancelled) {
@@ -136,7 +163,6 @@ export default function MenuPage({ slug }: MenuPageProps) {
   }), [restaurant]);
 
   // ── Prop i18n du DynamicHero ──────────────────────────────────
-  // Tous les textes sont résolus ici — DynamicHero ne voit que des strings.
   const heroI18n = useMemo<DynamicHeroI18n>(() => ({
     lang,
     titleLines:     tHeroLines(config),
@@ -158,7 +184,7 @@ export default function MenuPage({ slug }: MenuPageProps) {
     [restaurant, tField],
   );
 
-  // ── Labels traduits pour le modal ───────────────────────────────
+  // ── Labels traduits pour le modal ────────────────────────────
   const modalText = useMemo<TextConfig>(() => ({
     prix:        t("label_prix"),
     variants:    t("label_variants"),
@@ -191,24 +217,23 @@ export default function MenuPage({ slug }: MenuPageProps) {
   [categories, tField]);
 
   // ── Items avec name + description traduits ────────────────────
-// Dans MenuPage.tsx — remplacer le useMemo translatedItems existant par ceci :
+  const translatedItems = useMemo<MenuItem[]>(() =>
+    items.map((item): MenuItem => ({
+      ...item,
+      name:           tField(item.name_translations,        item.name),
+      description:    tField(item.description_translations, item.description ?? "") || undefined,
+      promotion_name: item.promotion_name_translations
+        ? tField(item.promotion_name_translations, item.promotion_name ?? "")
+        : item.promotion_name,
+    })),
+  [items, tField]);
 
-const translatedItems = useMemo<MenuItem[]>(() =>
-  items.map((item): MenuItem => ({
-    ...item,
-    name:             tField(item.name_translations,        item.name),
-    description:      tField(item.description_translations, item.description ?? "") || undefined,
-    // Traduction du nom de la promotion
-    promotion_name:   item.promotion_name_translations
-      ? tField(item.promotion_name_translations, item.promotion_name ?? "")
-      : item.promotion_name,
-  })),
-[items, tField]);
-
-  // ── Index : items par categorie ───────────────────────────────
+  // ── CHANGEMENT v7 — Index : items par catégorie ───────────────
+  // On utilise category_ids.includes() au lieu de category_id ===
+  // Un même item peut donc apparaître dans plusieurs catégories.
   const itemsByCategory = useMemo<Record<string, MenuItem[]>>(() =>
     translatedCategories.reduce<Record<string, MenuItem[]>>((acc, cat) => {
-      acc[cat.id] = translatedItems.filter(i => i.category_id === cat.id);
+      acc[cat.id] = translatedItems.filter(i => i.category_ids.includes(cat.id));
       return acc;
     }, {}),
   [translatedCategories, translatedItems]);
@@ -228,13 +253,14 @@ const translatedItems = useMemo<MenuItem[]>(() =>
     );
   }, [translatedItems, searchQuery]);
 
-  // ── Index : items filtrés par catégorie ──────────────────────
+  // ── CHANGEMENT v7 — Index : items filtrés par catégorie ──────
   const filteredByCategory = useMemo<Record<string, MenuItem[]>>(() =>
     translatedCategories.reduce<Record<string, MenuItem[]>>((acc, cat) => {
-      acc[cat.id] = searchedItems.filter(i => i.category_id === cat.id);
+      acc[cat.id] = searchedItems.filter(i => i.category_ids.includes(cat.id));
       return acc;
     }, {}),
   [translatedCategories, searchedItems]);
+  // ── FIN CHANGEMENT ────────────────────────────────────────────
 
   // ── Catégories visibles (filtre recherche + filtre nav) ───────
   const filteredCats = useMemo<Category[]>(() => {
@@ -296,10 +322,8 @@ const translatedItems = useMemo<MenuItem[]>(() =>
 
   // ─────────────────────────────────────────────────────────────
   // Rendu principal
-  // À ce stade, restaurant est non-null (garanti par le guard ci-dessus).
   // ─────────────────────────────────────────────────────────────
 
-  // Compteur d'index global pour le stagger des cartes
   let globalIdx = 0;
 
   return (
@@ -326,7 +350,7 @@ const translatedItems = useMemo<MenuItem[]>(() =>
             i18n={heroI18n}
           />
 
-          {/* ── Barre sticky : search + langue + catégories ───── */}
+          {/* ── Barre sticky ──────────────────────────────────── */}
           <StickyBar
             colors={colors}
             activeCats={activeCats}
@@ -344,7 +368,7 @@ const translatedItems = useMemo<MenuItem[]>(() =>
           />
 
           {/* ── Liste des plats ────────────────────────────────── */}
-          <main style={{ paddingBottom: 32, paddingTop: 8, overflow: "visible", background:"transparent", backdropFilter: "blur(2px)" }}>
+          <main style={{ paddingBottom: 32, paddingTop: 8, overflow: "visible", background: "transparent", backdropFilter: "blur(2px)" }}>
             <AnimatePresence>
               {filteredCats.length === 0 ? (
                 <motion.div
@@ -387,36 +411,35 @@ const translatedItems = useMemo<MenuItem[]>(() =>
             </AnimatePresence>
           </main>
 
-          <div style={{background: `${colors.main}`, padding: "24px 16px"}} >
+          <div style={{ background: `${colors.main}`, padding: "24px 16px" }}>
 
-          {/* ── Réseaux sociaux ────────────────────────────────── */}
-          <FunSocials
-            restaurant={restaurant}
-            colors={colors}
-            config={config}
-            sectionLabel={socialsLabel}
-            labelPhone={labelPhone}
-            labelMail={labelMail}
-          />
+            {/* ── Réseaux sociaux ──────────────────────────────── */}
+            <FunSocials
+              restaurant={restaurant}
+              colors={colors}
+              config={config}
+              sectionLabel={socialsLabel}
+              labelPhone={labelPhone}
+              labelMail={labelMail}
+            />
 
-          {/* ── Footer ─────────────────────────────────────────── */}
-          <footer style={{ textAlign: "center", padding: "24px 16px 40px", borderTop: `1px solid ${colors.primary}08` }}>
-            <p style={{ fontSize: 10, letterSpacing: "0.2em", color: `${colors.primary}80`, fontFamily: "sans-serif", textTransform: "uppercase" }}>
-              {/* Nom traduit depuis la BD */}
-              {restaurantDisplayName} · {t("digital_menu")}
-            </p>
-            <p style={{ fontSize: 9, marginTop: 4, color: `${colors.primary}60`, fontFamily: "sans-serif" }}>
-              {t("powered_by")}
-            </p>
-            <p style={{ fontSize: 16, color: `${colors.primary}80`, fontFamily: "sans-serif" }}>
-              {restaurant.address && (
-                <span style={{ color: `${colors.primary}` }}>
-                  {t("Adresse")} : {tField(restaurant.address_translations, restaurant.address)}<br />
-                </span>
-              )}
-            </p>
-          </footer>
-              </div>
+            {/* ── Footer ───────────────────────────────────────── */}
+            <footer style={{ textAlign: "center", padding: "24px 16px 40px", borderTop: `1px solid ${colors.primary}08` }}>
+              <p style={{ fontSize: 10, letterSpacing: "0.2em", color: `${colors.primary}80`, fontFamily: "sans-serif", textTransform: "uppercase" }}>
+                {restaurantDisplayName} · {t("digital_menu")}
+              </p>
+              <p style={{ fontSize: 9, marginTop: 4, color: `${colors.primary}60`, fontFamily: "sans-serif" }}>
+                {t("powered_by")}
+              </p>
+              <p style={{ fontSize: 16, color: `${colors.primary}80`, fontFamily: "sans-serif" }}>
+                {restaurant.address && (
+                  <span style={{ color: `${colors.primary}` }}>
+                    {t("Adresse")} : {tField(restaurant.address_translations, restaurant.address)}<br />
+                  </span>
+                )}
+              </p>
+            </footer>
+          </div>
         </div>
       </div>
     </div>

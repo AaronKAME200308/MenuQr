@@ -1,29 +1,16 @@
-// hooks/useFilteredMenu.ts — v2 (typages stricts)
-// Calcule les items filtrés par catégorie et par recherche.
+// hooks/useFilteredMenu.ts — v3 (N-à-N categories)
+// Utilise category_ids: string[] au lieu de category_id: string
 
 import { useMemo } from "react";
 import type { Category, MenuItem } from "../components/types";
 
-// ─────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────
-
 export interface UseFilteredMenuResult {
-  /** Tous les items groupés par category_id (avant filtre recherche) */
   itemsByCategory:    Record<string, MenuItem[]>;
-  /** Catégories ayant au moins 1 item disponible */
   activeCats:         Category[];
-  /** Items filtrés par recherche, groupés par category_id */
   filteredByCategory: Record<string, MenuItem[]>;
-  /** Catégories visibles (filtre nav + filtre recherche) */
   filteredCats:       Category[];
-  /** Nombre total d'items visibles */
   totalResults:       number;
 }
-
-// ─────────────────────────────────────────────────────────────
-// Hook
-// ─────────────────────────────────────────────────────────────
 
 export function useFilteredMenu(
   categories:     Category[],
@@ -32,20 +19,17 @@ export function useFilteredMenu(
   activeCategory: string,
 ): UseFilteredMenuResult {
 
-  // Tous les items groupés par catégorie
   const itemsByCategory = useMemo<Record<string, MenuItem[]>>(() =>
     categories.reduce<Record<string, MenuItem[]>>((acc, cat) => {
-      acc[cat.id] = items.filter(i => i.category_id === cat.id);
+      acc[cat.id] = items.filter(i => i.category_ids.includes(cat.id));
       return acc;
     }, {}),
   [categories, items]);
 
-  // Catégories avec au moins 1 item
   const activeCats = useMemo<Category[]>(() =>
     categories.filter(c => (itemsByCategory[c.id]?.length ?? 0) > 0),
   [categories, itemsByCategory]);
 
-  // Items correspondant à la recherche
   const searchedItems = useMemo<MenuItem[]>(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return items;
@@ -55,15 +39,13 @@ export function useFilteredMenu(
     );
   }, [items, searchQuery]);
 
-  // Items filtrés groupés par catégorie
   const filteredByCategory = useMemo<Record<string, MenuItem[]>>(() =>
     categories.reduce<Record<string, MenuItem[]>>((acc, cat) => {
-      acc[cat.id] = searchedItems.filter(i => i.category_id === cat.id);
+      acc[cat.id] = searchedItems.filter(i => i.category_ids.includes(cat.id));
       return acc;
     }, {}),
   [categories, searchedItems]);
 
-  // Catégories visibles selon filtre recherche + filtre nav
   const filteredCats = useMemo<Category[]>(() => {
     const withItems = activeCats.filter(
       c => (filteredByCategory[c.id]?.length ?? 0) > 0,
@@ -74,7 +56,6 @@ export function useFilteredMenu(
       : withItems.filter(c => c.id === activeCategory);
   }, [activeCats, filteredByCategory, searchQuery, activeCategory]);
 
-  // Total des résultats visibles
   const totalResults = useMemo<number>(() =>
     filteredCats.reduce((n, c) => n + (filteredByCategory[c.id]?.length ?? 0), 0),
   [filteredCats, filteredByCategory]);

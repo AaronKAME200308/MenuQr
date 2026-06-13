@@ -1,22 +1,18 @@
-// hooks/useRestaurantData.ts — v2 (typages stricts + cleanup)
-// Charge restaurant, categories et items depuis Supabase.
+// hooks/useRestaurantData.ts — v3 (N-à-N categories)
+// Joint menu_item_categories pour peupler category_ids[]
 
 import { useEffect, useState } from "react";
 import { createClient }        from "@supabase/supabase-js";
 import type { Restaurant, Category, MenuItem } from "../components/types";
-
-// ─────────────────────────────────────────────────────────────
-// Client Supabase (singleton module-level)
-// ─────────────────────────────────────────────────────────────
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL      as string,
   import.meta.env.VITE_SUPABASE_ANON_KEY as string,
 );
 
-// ─────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────
+interface RawMenuItem extends Omit<MenuItem, "category_ids"> {
+  menu_item_categories: { category_id: string }[];
+}
 
 export interface UseRestaurantDataResult {
   restaurant: Restaurant | null;
@@ -25,10 +21,6 @@ export interface UseRestaurantDataResult {
   loading:    boolean;
   error:      string | null;
 }
-
-// ─────────────────────────────────────────────────────────────
-// Hook
-// ─────────────────────────────────────────────────────────────
 
 export function useRestaurantData(slug: string): UseRestaurantDataResult {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -57,19 +49,30 @@ export function useRestaurantData(slug: string): UseRestaurantDataResult {
           .returns<Category[]>();
         if (e2) throw e2;
 
-        const { data: menuItems, error: e3 } = await supabase
+        const { data: rawItems, error: e3 } = await supabase
           .from("menu_items")
-          .select("*")
+          .select(`
+            *,
+            menu_item_categories ( category_id )
+          `)
           .eq("restaurant_id", resto.id)
           .eq("is_available", true)
           .order("sort_order")
-          .returns<MenuItem[]>();
+          .returns<RawMenuItem[]>();
         if (e3) throw e3;
+
+        const menuItems: MenuItem[] = (rawItems ?? []).map((raw) => {
+          const { menu_item_categories: mic, ...rest } = raw;
+          return {
+            ...rest,
+            category_ids: (mic ?? []).map((r) => r.category_id),
+          };
+        });
 
         if (!cancelled) {
           setRestaurant(resto);
-          setCategories(cats      ?? []);
-          setItems(menuItems      ?? []);
+          setCategories(cats ?? []);
+          setItems(menuItems);
         }
       } catch (err: unknown) {
         if (!cancelled) {
