@@ -390,7 +390,7 @@ export default function ItemModal({ item, colors, onClose, text }: Props) {
             </div>
 
             {/* ══ SECTION BASSE ══ */}
-            <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", scrollbarWidth: "none", display: "flex", flexDirection: "column", gap: 20, padding: `${OVERHANG + 28}px 22px 36px`, background: colors.bg }}>
+            <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", scrollbarWidth: "thin", scrollbarColor: `${colors.accent}40 transparent`, display: "flex", flexDirection: "column", gap: 20, padding: `${OVERHANG + 28}px 22px 36px`, background: colors.bg }}>
 
               {/* ── Prix + disponibilité ── */}
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", paddingBottom: 18, borderBottom: `0.5px solid ${colors.primary}12` }}>
@@ -413,7 +413,7 @@ export default function ItemModal({ item, colors, onClose, text }: Props) {
                         style={{ display: "flex", alignItems: "center", gap: 8 }}
                       >
                         <span style={{ fontSize: 30, fontWeight: 900, color: "#e53935", letterSpacing: "-0.04em", lineHeight: 1 }}>
-                          {fmt(displayPrice, displayCurrency, text.offert)}
+                          {fmt(displayPrice, displayCurrency)}
                         </span>
                         <span style={{ fontSize: 10, fontWeight: 800, background: "linear-gradient(135deg,#e53935,#ff5252)", color: "#fff", padding: "3px 8px", borderRadius: 99, boxShadow: "0 3px 10px rgba(229,57,53,0.35)" }}>
                           -{item.promotion}%
@@ -497,10 +497,10 @@ export default function ItemModal({ item, colors, onClose, text }: Props) {
                   gap:          10,
                   padding:      "12px 14px",
                   borderRadius: 14,
-                  background:   "rgba(255,160,0,0.08)",
-                  border:       "1px solid rgba(255,160,0,0.25)",
+                  background:   "rgba(255,160,0,0.07)",
+                  border:       "1px solid rgba(255,160,0,0.22)",
                 }}>
-                  <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+                  <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>⚠</span>
                   <div>
                     <p style={{
                       fontSize:      10,

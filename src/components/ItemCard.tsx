@@ -10,8 +10,7 @@ import type { MenuItem, Colors }        from "./types";
 // Helpers
 // ─────────────────────────────────────────────────────────────
 
-export function fmt(price: number, currency = "XAF", freeLabel?: string): string {
-  if (price === 0 && freeLabel) return freeLabel;
+export function fmt(price: number, currency = "XAF"): string {
   return new Intl.NumberFormat("fr-FR", {
     style:    "currency",
     currency,
@@ -182,14 +181,13 @@ interface ItemCardProps {
   labelNew:        string;
   labelVegetarian: string;
   labelSpicy:      string;
-  labelOffert:     string;
 }
 
 const ItemCard: FC<ItemCardProps> = ({
   item, colors, index, onOpen,
   labelVoir, labelTailles,
   labelBestseller, labelPopular, labelNew,
-  labelVegetarian, labelSpicy, labelOffert,
+  labelVegetarian, labelSpicy,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
     if (e.key === "Enter" || e.key === " ") {
@@ -303,7 +301,7 @@ const ItemCard: FC<ItemCardProps> = ({
           </p>
         )}
 
-        {/* Icônes régime */}
+        {/* Icônes régime + allergènes */}
         <div style={{ display: "flex", gap: 4, marginTop: 2 }}>
           {item.is_vegetarian && (
             <span title={labelVegetarian} style={{ width: 18, height: 18, borderRadius: "50%", background: "#50c878cc", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -315,36 +313,12 @@ const ItemCard: FC<ItemCardProps> = ({
               <Flame size={10} color="#fff" />
             </span>
           )}
-        </div>
-
-        {/* Badge allergènes */}
-        {item.allergens && (
-          <div style={{
-            display:      "flex",
-            alignItems:   "center",
-            gap:          4,
-            marginTop:    4,
-            padding:      "3px 8px",
-            borderRadius: 999,
-            background:   "rgba(255,160,0,0.12)",
-            border:       "1px solid rgba(255,160,0,0.3)",
-            maxWidth:     "100%",
-          }}>
-            <span style={{ fontSize: 9 }}>⚠️</span>
-            <span style={{
-              fontSize:     8,
-              fontWeight:   600,
-              color:        "#b06000",
-              fontFamily:   "sans-serif",
-              overflow:     "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace:   "nowrap",
-              maxWidth:     100,
-            }}>
-              {item.allergens}
+          {item.allergens && (
+            <span title={item.allergens} style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,160,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, lineHeight: 1, color: "#fff", fontWeight: 700 }}>
+              ⚠
             </span>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Séparateur */}
         <div style={{ width: 28, height: 1, background: `${colors.primary}12`, margin: "6px 0" }} />
@@ -377,7 +351,7 @@ const ItemCard: FC<ItemCardProps> = ({
                     lineHeight:   1,
                   }}
                 >
-                  {fmt(discountedPrice!, item.currency, labelOffert)}
+                  {fmt(discountedPrice!, item.currency)}
                 </motion.span>
               </>
             ) : (
