@@ -66,40 +66,103 @@ export const DishBadge: FC<DishBadgeProps> = ({ item, labelBestseller, labelPopu
 // ─────────────────────────────────────────────────────────────
 
 interface PromoBadgeProps {
-  pct: number;
+  pct:       number;
+  freeLabel: string;
 }
 
-const PromoBadge: FC<PromoBadgeProps> = ({ pct }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.7, x: -6 }}
-    animate={{ opacity: 1, scale: 1,   x: 0  }}
-    transition={{ delay: 0.18, type: "spring", stiffness: 340, damping: 22 }}
-    style={{
-      position:      "absolute",
-      bottom:        -12,
-      left:          -4,
-      zIndex:        4,
-      pointerEvents: "none",
-    }}
-  >
-    <span style={{
-      display:       "inline-flex",
-      alignItems:    "center",
-      gap:           3,
-      background:    "linear-gradient(135deg, #e53935 0%, #ff5252 100%)",
-      color:         "#fff",
-      fontSize:      9,
-      fontWeight:    900,
-      padding:       "3px 7px 3px 5px",
-      borderRadius:  "0 8px 8px 0",
-      boxShadow:     "0 3px 10px rgba(229,57,53,0.40)",
-      letterSpacing: "-0.01em",
-    }}>
-      <Tag size={8} color="#fff" />
-      -{pct}%
-    </span>
-  </motion.div>
-);
+const PromoBadge: FC<PromoBadgeProps> = ({ pct, freeLabel }) => {
+  const isFree = pct >= 100;
+
+  if (isFree) {
+    // Badge rond style "sunburst" avec pointes triangulaires
+    const spikes = 8;
+    const cx = 22, cy = 22, r1 = 18, r2 = 13;
+    const points: string[] = [];
+    for (let i = 0; i < spikes * 2; i++) {
+      const angle = (i * Math.PI) / spikes - Math.PI / 2;
+      const r = i % 2 === 0 ? r1 : r2;
+      points.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`);
+    }
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
+        animate={{ opacity: 1, scale: 1,   rotate: 0   }}
+        transition={{ delay: 0.18, type: "spring", stiffness: 340, damping: 18 }}
+        style={{
+          position:      "absolute",
+          bottom:        -14,
+          left:          -8,
+          zIndex:        4,
+          pointerEvents: "none",
+          width:         44,
+          height:        44,
+        }}
+      >
+        <svg width={44} height={44} viewBox="0 0 44 44">
+          <defs>
+            <radialGradient id="free-grad" cx="40%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#ff5252" />
+              <stop offset="100%" stopColor="#c62828" />
+            </radialGradient>
+            <filter id="free-shadow">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#c6282866" />
+            </filter>
+          </defs>
+          <polygon
+            points={points.join(" ")}
+            fill="url(#free-grad)"
+            filter="url(#free-shadow)"
+          />
+          <text
+            x={cx} y={cy + 1}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="#fff"
+            fontSize="7"
+            fontWeight="900"
+            fontFamily="sans-serif"
+            letterSpacing="-0.3"
+          >
+            {freeLabel.toUpperCase()}
+          </text>
+        </svg>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.7, x: -6 }}
+      animate={{ opacity: 1, scale: 1,   x: 0  }}
+      transition={{ delay: 0.18, type: "spring", stiffness: 340, damping: 22 }}
+      style={{
+        position:      "absolute",
+        bottom:        -12,
+        left:          -4,
+        zIndex:        4,
+        pointerEvents: "none",
+      }}
+    >
+      <span style={{
+        display:       "inline-flex",
+        alignItems:    "center",
+        gap:           3,
+        background:    "linear-gradient(135deg, #e53935 0%, #ff5252 100%)",
+        color:         "#fff",
+        fontSize:      9,
+        fontWeight:    900,
+        padding:       "3px 7px 3px 5px",
+        borderRadius:  "0 8px 8px 0",
+        boxShadow:     "0 3px 10px rgba(229,57,53,0.40)",
+        letterSpacing: "-0.01em",
+      }}>
+        <Tag size={8} color="#fff" />
+        -{pct}%
+      </span>
+    </motion.div>
+  );
+};
 
 // ─────────────────────────────────────────────────────────────
 // FloatingImage
@@ -181,13 +244,14 @@ interface ItemCardProps {
   labelNew:        string;
   labelVegetarian: string;
   labelSpicy:      string;
+  labelOffert:     string;
 }
 
 const ItemCard: FC<ItemCardProps> = ({
   item, colors, index, onOpen,
   labelVoir, labelTailles,
   labelBestseller, labelPopular, labelNew,
-  labelVegetarian, labelSpicy,
+  labelVegetarian, labelSpicy, labelOffert,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>): void => {
     if (e.key === "Enter" || e.key === " ") {
@@ -264,7 +328,7 @@ const ItemCard: FC<ItemCardProps> = ({
       </div>
 
       {/* Badge promo bas-gauche */}
-      {hasPromo && <PromoBadge pct={item.promotion!} />}
+      {hasPromo && <PromoBadge pct={item.promotion!} freeLabel={labelOffert} />}
 
       {/* Corps */}
       <div style={{
@@ -301,7 +365,7 @@ const ItemCard: FC<ItemCardProps> = ({
           </p>
         )}
 
-        {/* Icônes régime + allergènes */}
+        {/* Icônes régime */}
         <div style={{ display: "flex", gap: 4, marginTop: 2 }}>
           {item.is_vegetarian && (
             <span title={labelVegetarian} style={{ width: 18, height: 18, borderRadius: "50%", background: "#50c878cc", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -311,11 +375,6 @@ const ItemCard: FC<ItemCardProps> = ({
           {item.is_spicy && (
             <span title={labelSpicy} style={{ width: 18, height: 18, borderRadius: "50%", background: "#ff4500cc", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Flame size={10} color="#fff" />
-            </span>
-          )}
-          {item.allergens && (
-            <span title={item.allergens} style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(255,160,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, lineHeight: 1, color: "#fff", fontWeight: 700 }}>
-              ⚠
             </span>
           )}
         </div>
