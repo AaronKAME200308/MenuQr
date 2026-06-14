@@ -37,7 +37,6 @@ const CategorySection: FC<CategorySectionProps> = ({
   labelNew,
   labelVegetarian,
   labelSpicy,
-  labelOffert,
 }) => {
   const safeItems = Array.isArray(items) ? items : [];
   if (safeItems.length === 0) return null;
@@ -119,7 +118,6 @@ const CategorySection: FC<CategorySectionProps> = ({
               labelNew={labelNew}
               labelVegetarian={labelVegetarian}
               labelSpicy={labelSpicy}
-              labelOffert={labelOffert}
             />
           ))}
         </AnimatePresence>
