@@ -196,6 +196,7 @@ console.log("menuItems sample:", JSON.stringify(menuItems?.[0], null, 2));
     vegetarian:  t("label_vegetarian"),
     spicy:       t("label_spicy"),
     offert:      t("label_offert"),
+    allergenes:  t("label_allergenes"),
   }), [t]);
 
   // ── Labels traduits pour les cartes ──────────────────────────
@@ -229,6 +230,9 @@ console.log("menuItems sample:", JSON.stringify(menuItems?.[0], null, 2));
       promotion_name: item.promotion_name_translations
         ? tField(item.promotion_name_translations, item.promotion_name ?? "")
         : item.promotion_name,
+      allergens: item.allergens_translations
+        ? tField(item.allergens_translations, item.allergens ?? "")
+        : item.allergens,
     })),
   [items, tField]);
 

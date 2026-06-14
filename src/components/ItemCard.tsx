@@ -317,6 +317,35 @@ const ItemCard: FC<ItemCardProps> = ({
           )}
         </div>
 
+        {/* Badge allergènes */}
+        {item.allergens && (
+          <div style={{
+            display:      "flex",
+            alignItems:   "center",
+            gap:          4,
+            marginTop:    4,
+            padding:      "3px 8px",
+            borderRadius: 999,
+            background:   "rgba(255,160,0,0.12)",
+            border:       "1px solid rgba(255,160,0,0.3)",
+            maxWidth:     "100%",
+          }}>
+            <span style={{ fontSize: 9 }}>⚠️</span>
+            <span style={{
+              fontSize:     8,
+              fontWeight:   600,
+              color:        "#b06000",
+              fontFamily:   "sans-serif",
+              overflow:     "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace:   "nowrap",
+              maxWidth:     100,
+            }}>
+              {item.allergens}
+            </span>
+          </div>
+        )}
+
         {/* Séparateur */}
         <div style={{ width: 28, height: 1, background: `${colors.primary}12`, margin: "6px 0" }} />
 

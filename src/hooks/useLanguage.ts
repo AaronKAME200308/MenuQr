@@ -60,6 +60,7 @@ const UI_STRINGS: Record<string, UITranslations> = {
     label_new:             "Nouveau",
     all_categories:        "Tout",
     label_offert:          "Offert",
+    label_allergenes:      "Allergènes",
   },
   en: {
     search_placeholder:    "Search a dish…",
@@ -90,6 +91,7 @@ const UI_STRINGS: Record<string, UITranslations> = {
     label_new:             "New",
     all_categories:        "All",
     label_offert:          "Free",
+    label_allergenes:      "Allergens",
   },
   de: {
     search_placeholder:    "Gericht suchen…",
@@ -120,6 +122,7 @@ const UI_STRINGS: Record<string, UITranslations> = {
     label_new:             "Neu",
     all_categories:        "Alle",
     label_offert:          "Gratis",
+    label_allergenes:      "Allergene",
   },
   ar: {
     search_placeholder:    "ابحث عن طبق…",
@@ -150,6 +153,7 @@ const UI_STRINGS: Record<string, UITranslations> = {
     label_new:             "جديد",
     all_categories:        "الكل",
     label_offert:          "مجاني",
+    label_allergenes:      "مسببات الحساسية",
   },
 };
 

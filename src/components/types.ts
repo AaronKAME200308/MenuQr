@@ -34,6 +34,7 @@ export interface TextConfig {
   spicy:       string;
   vegetarian:  string;
   offert:      string;
+  allergenes:  string;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -90,6 +91,10 @@ export interface MenuItem {
   promotion_name?:                string;
   /** Traductions du nom de la promotion */
   promotion_name_translations?:   Record<SupportedLang, string>;
+  /** Texte des allergènes (langue par défaut = FR) */
+  allergens?:                     string;
+  /** Traductions du texte allergènes */
+  allergens_translations?:        Record<SupportedLang, string>;
 }
 
 export interface Category {

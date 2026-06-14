@@ -488,6 +488,43 @@ export default function ItemModal({ item, colors, onClose, text }: Props) {
                   </p>
                 </div>
               )}
+
+              {/* ── Allergènes ── */}
+              {item.allergens && (
+                <div style={{
+                  display:      "flex",
+                  alignItems:   "flex-start",
+                  gap:          10,
+                  padding:      "12px 14px",
+                  borderRadius: 14,
+                  background:   "rgba(255,160,0,0.08)",
+                  border:       "1px solid rgba(255,160,0,0.25)",
+                }}>
+                  <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+                  <div>
+                    <p style={{
+                      fontSize:      10,
+                      fontWeight:    700,
+                      letterSpacing: "0.15em",
+                      textTransform: "uppercase",
+                      color:         "#b06000",
+                      fontFamily:    "sans-serif",
+                      marginBottom:  4,
+                    }}>
+                      {text.allergenes}
+                    </p>
+                    <p style={{
+                      fontSize:   13,
+                      lineHeight: 1.6,
+                      color:      "#7a4400",
+                      fontFamily: "sans-serif",
+                      fontWeight: 500,
+                    }}>
+                      {item.allergens}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         </motion.div>
