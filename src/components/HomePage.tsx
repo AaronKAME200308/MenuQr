@@ -297,17 +297,14 @@ export default function HomePage() {
           .order("name");
 
         // Charge les restaurants avec leurs types
-        const { data: restosData, error } = await supabase
+        const { data: restosData } = await supabase
           .from("restaurants")
           .select(`
-    id, slug, name, tagline, logo_url, cover_url,
-    address, color_accent, color_bg,
-    restaurant_types_restaurants ( restaurant_types!type_id ( id, name, slug, icon ) )
-  `)
+            id, slug, name, tagline, logo_url, cover_url,
+            address, color_accent, color_bg,
+            restaurant_types_restaurants ( restaurant_types!type_id ( id, name, slug, icon ) )
+          `)
           .order("name");
-
-        console.log("raw:", JSON.stringify(restosData, null, 2));
-        console.log("error:", error);
 
         const restos: Restaurant[] = (restosData ?? []).map((r: any) => ({
           ...r,
