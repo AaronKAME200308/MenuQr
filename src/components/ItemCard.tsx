@@ -355,7 +355,7 @@ const ItemCard: FC<ItemCardProps> = ({
           <p style={{
             fontSize:        10,
             lineHeight:      1.5,
-            color:           `${colors.accent}90`,
+            color:           `${colors.main}90`,
             display:         "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
@@ -380,7 +380,7 @@ const ItemCard: FC<ItemCardProps> = ({
         </div>
 
         {/* Séparateur */}
-        <div style={{ width: 28, height: 1, background: `${colors.primary}12`, margin: "6px 0" }} />
+        <div style={{ width: 28, height: 1, background: `${colors.main}12`, margin: "6px 0" }} />
 
         {/* Prix */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
@@ -391,7 +391,7 @@ const ItemCard: FC<ItemCardProps> = ({
                 <span style={{
                   fontSize:       10,
                   fontWeight:     600,
-                  color:          `${colors.primary}`,
+                  color:          `${colors.main}`,
                   textDecoration: "line-through",
                   letterSpacing:  "-0.01em",
                 }}>
@@ -414,7 +414,7 @@ const ItemCard: FC<ItemCardProps> = ({
                 </motion.span>
               </>
             ) : (
-              <p style={{ fontSize: 15, fontWeight: 900, color: colors.primary, letterSpacing: "-0.02em" }}>
+              <p style={{ fontSize: 15, fontWeight: 900, color: colors.main, letterSpacing: "-0.02em" }}>
                 {fmt(item.price, item.currency)}
               </p>
             )}
@@ -428,7 +428,7 @@ const ItemCard: FC<ItemCardProps> = ({
         </div>
 
         {item.variants && item.variants.length > 0 && (
-          <p style={{ fontSize: 9, color: `${colors.primary}`, fontFamily: "sans-serif" }}>
+          <p style={{ fontSize: 9, color: `${colors.main}`, fontFamily: "sans-serif" }}>
             {item.variants.length} {labelTailles}
           </p>
         )}
