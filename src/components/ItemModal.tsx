@@ -294,7 +294,7 @@ export default function ItemModal({ item, colors, onClose, text }: Props) {
 
   const accent  = colors.accent;
   const primary = colors.primary;
-  const dark    = colors.primary;
+  const dark    = colors.main;
   const muted   = `${colors.accent}70`;
 
   return (

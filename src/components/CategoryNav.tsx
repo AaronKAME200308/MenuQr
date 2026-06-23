@@ -101,7 +101,7 @@ export default function CategoryNav({
                   outline: "none",
                   border: isActive ? "none" : `1.5px solid ${colors.accent}80`,
                   background: isActive ? "transparent" : `${colors.accent}09`,
-                  color: isActive ? colors.bg : `${colors.accent}70`,
+                  color: isActive ? colors.bg : `${colors.main}70`,
                   boxShadow: isActive ? `0 6px 20px ${colors.accent}35, 0 2px 6px ${colors.accent}20` : "0 1px 3px rgba(0,0,0,0.08)",
                   transition: "color 0.2s, border-color 0.2s, box-shadow 0.2s, padding 0.2s",
                 }}

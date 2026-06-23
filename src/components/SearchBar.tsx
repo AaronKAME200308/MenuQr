@@ -32,14 +32,14 @@ export default function SearchBar({
 
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "center", background: colors.bg, border: `1.5px solid ${query ? colors.accent + "55" : colors.accent + "22"}`, borderRadius: 16, padding: "0 14px", transition: "border-color 0.25s", boxShadow: query ? `0 4px 20px ${colors.accent}12` : `0 1px 4px ${colors.accent}08` }}>
-      <Search size={15} color={`${colors.accent}70`} style={{ flexShrink: 0 }} />
+      <Search size={15} color={`${colors.main}70`} style={{ flexShrink: 0 }} />
       <input
         ref={inputRef}
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
-        style={{ flex: 1, background: "transparent", border: "none", outline: "none", padding: "13px 10px", fontSize: 13, color: colors.accent, fontFamily: "sans-serif" }}
+        style={{ flex: 1, background: "transparent", border: "none", outline: "none", padding: "13px 10px", fontSize: 13, color: colors.main, fontFamily: "sans-serif" }}
       />
       <AnimatePresence>
         {query && (
