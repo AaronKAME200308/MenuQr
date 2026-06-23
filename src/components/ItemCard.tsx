@@ -292,7 +292,7 @@ const ItemCard: FC<ItemCardProps> = ({
         background:     `${colors.accent}10`,
         backdropFilter: "blur(12px)",
         border:         hasPromo
-          ? "3px solid #e53935"
+          ? "3px solid #2E7D32"
           : `3px solid ${colors.main}90`,
         borderRadius:   20,
         overflow:       "visible",
