@@ -420,7 +420,7 @@ console.log("menuItems sample:", JSON.stringify(menuItems?.[0], null, 2));
             </AnimatePresence>
           </main>
 
-          <div style={{ background: `${colors.main}90`, padding: "24px 16px" }}>
+          <div style={{ background: `${colors.main}`, padding: "24px 16px" }}>
 
             {/* ── Réseaux sociaux ──────────────────────────────── */}
             <FunSocials

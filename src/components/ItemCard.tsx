@@ -289,7 +289,7 @@ const ItemCard: FC<ItemCardProps> = ({
         alignItems:     "center",
         paddingTop:     OVERHANG,
         marginTop:      OVERHANG,
-        background:     `${colors.accent}10`,
+        background:     `${colors.card}10`,
         backdropFilter: "blur(12px)",
         border:         hasPromo
           ? "3px solid #2E7D32"
