@@ -209,8 +209,8 @@ const FloatingImage: FC<FloatingImageProps> = ({ src, alt, colors, delay = 0 }) 
         height:       CIRCLE_SIZE,
         borderRadius: "50%",
         overflow:     "hidden",
-        border:       `3px solid ${colors.accent}`,
-        boxShadow:    `0 8px 28px ${colors.accent}20, 0 0 0 5px ${colors.bg}`,
+        border:       `3px solid ${colors.main}`,
+        boxShadow:    `0 8px 28px ${colors.main}20, 0 0 0 5px ${colors.bg}`,
         zIndex:       2,
         cursor:       "pointer",
       }}
@@ -292,8 +292,8 @@ const ItemCard: FC<ItemCardProps> = ({
         background:     `${colors.accent}10`,
         backdropFilter: "blur(12px)",
         border:         hasPromo
-          ? "3px solid rgba(229,57,53,0.55)"
-          : `3px solid ${colors.accent}90`,
+          ? "3px solid #e53935"
+          : `3px solid ${colors.main}90`,
         borderRadius:   20,
         overflow:       "visible",
         position:       "relative",
@@ -421,7 +421,7 @@ const ItemCard: FC<ItemCardProps> = ({
           </div>
           <motion.span
             whileHover={{ x: 3 }}
-            style={{ fontSize: 10, color: `${colors.accent}`, fontFamily: "sans-serif" }}
+            style={{ fontSize: 10, color: `${colors.main}`, fontFamily: "sans-serif" }}
           >
             {labelVoir}
           </motion.span>
