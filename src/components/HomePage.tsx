@@ -1,7 +1,8 @@
-// HomePage.tsx — Page d'accueil MenuQR
-// Liste les restaurants groupés par type, fond vert, cartes avec image + logo
+// HomePage.tsx — Page d'accueil MenuQr (v2, palette du logo)
+// Liste les restaurants groupés par type. Fond crème, accents terracotta et vert.
 
 import { useEffect, useState, useMemo } from "react";
+import type { CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
 import { Search, MapPin, ChevronRight } from "lucide-react";
@@ -10,6 +11,25 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL as string,
   import.meta.env.VITE_SUPABASE_ANON_KEY as string,
 );
+
+// ─────────────────────────────────────────────────────────────
+// Palette MenuQr
+// ─────────────────────────────────────────────────────────────
+
+const C = {
+  cream:      "#F6EFE2",
+  ivory:      "#FBF5E9",
+  white:      "#FFFFFF",
+  terracotta: "#A44A26",
+  forest:     "#2B4A3A",
+  green:      "#3E6B4F",
+  sage:       "#6E9A5A",
+  muted:      "#5A4A3C",
+  line:       "rgba(43,74,58,0.12)",
+};
+
+const FONT_TITLE = "'Fraunces', Georgia, serif";
+const FONT_BODY  = "'DM Sans', system-ui, sans-serif";
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -28,7 +48,7 @@ interface Restaurant {
   name: string;
   tagline?: string;
   logo_url?: string;
-  cover_url?: string;   // nouvelle propriété image de fond carte
+  cover_url?: string;   // image de fond de la carte
   address?: string;
   color_accent: string;
   color_bg: string;
@@ -53,6 +73,98 @@ const TYPE_META: Record<string, { icon: string; color: string }> = {
   "brasserie": { icon: "🥂", color: "#4527A0" },
   "traiteur": { icon: "👨‍🍳", color: "#00838F" },
 };
+
+// ─────────────────────────────────────────────────────────────
+// Logo MenuQr (symbole : QR code + fourchette dans une carte)
+// ─────────────────────────────────────────────────────────────
+
+function MenuQrMark({ size = 72 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="16 16 182 182" aria-hidden="true">
+      <rect x="29" y="29" width="140" height="140" rx="28" fill={C.ivory} stroke={C.terracotta} strokeWidth="7" />
+      {/* repères d'angle */}
+      <rect x="49" y="49" width="28" height="28" rx="8" fill="none" stroke={C.terracotta} strokeWidth="6" />
+      <rect x="58" y="58" width="10" height="10" rx="3" fill={C.green} />
+      <rect x="121" y="49" width="28" height="28" rx="8" fill="none" stroke={C.terracotta} strokeWidth="6" />
+      <rect x="130" y="58" width="10" height="10" rx="3" fill={C.green} />
+      <rect x="49" y="121" width="28" height="28" rx="8" fill="none" stroke={C.terracotta} strokeWidth="6" />
+      <rect x="58" y="130" width="10" height="10" rx="3" fill={C.green} />
+      {/* fourchette */}
+      <g fill={C.forest}>
+        <rect x="82" y="46" width="10" height="10" rx="2" />
+        <rect x="82" y="58" width="10" height="10" rx="2" />
+        <rect x="106" y="46" width="10" height="10" rx="2" />
+        <rect x="106" y="58" width="10" height="10" rx="2" />
+        <rect x="82" y="70" width="10" height="10" rx="2" />
+        <rect x="94" y="70" width="10" height="10" rx="2" />
+        <rect x="106" y="70" width="10" height="10" rx="2" />
+        <rect x="94" y="82" width="10" height="10" rx="2" />
+        <rect x="94" y="94" width="10" height="10" rx="2" />
+        <rect x="94" y="106" width="10" height="10" rx="2" />
+        <rect x="94" y="118" width="10" height="10" rx="2" />
+        <rect x="94" y="130" width="10" height="10" rx="2" />
+        <rect x="94" y="142" width="10" height="10" rx="2" />
+      </g>
+      {/* pixels */}
+      <g fill={C.terracotta}>
+        <rect x="46" y="82" width="10" height="10" rx="2" />
+        <rect x="70" y="82" width="10" height="10" rx="2" />
+        <rect x="58" y="94" width="10" height="10" rx="2" />
+        <rect x="46" y="106" width="10" height="10" rx="2" />
+        <rect x="70" y="106" width="10" height="10" rx="2" />
+        <rect x="118" y="82" width="10" height="10" rx="2" />
+        <rect x="142" y="82" width="10" height="10" rx="2" />
+        <rect x="130" y="94" width="10" height="10" rx="2" />
+        <rect x="118" y="106" width="10" height="10" rx="2" />
+        <rect x="142" y="106" width="10" height="10" rx="2" />
+      </g>
+      <g fill={C.sage}>
+        <rect x="142" y="118" width="10" height="10" rx="2" />
+        <rect x="130" y="130" width="10" height="10" rx="2" />
+        <rect x="118" y="142" width="10" height="10" rx="2" />
+        <rect x="130" y="118" width="10" height="10" rx="2" opacity="0.65" />
+        <rect x="118" y="130" width="10" height="10" rx="2" opacity="0.65" />
+      </g>
+      <rect x="172" y="20" width="10" height="10" fill={C.sage} />
+      <rect x="186" y="34" width="7" height="7" fill={C.terracotta} />
+      <rect x="176" y="44" width="5" height="5" fill={C.green} />
+    </svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Loader : pixels de QR code qui s'allument
+// ─────────────────────────────────────────────────────────────
+
+function QrPixelsLoader() {
+  const cells = Array.from({ length: 36 }, (_, i) => i);
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(6, 12px)",
+        gap: 5,
+        justifyContent: "center",
+        margin: "0 auto 16px",
+      }}
+    >
+      {cells.map(i => (
+        <span
+          key={i}
+          className="mqr-pixel"
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: 3,
+            background: i % 5 === 0 ? C.terracotta : C.green,
+            animationDelay: `${((i * 7) % 12) * 0.13}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────
 // Composant carte restaurant
@@ -83,8 +195,8 @@ function RestaurantCard({ resto, index }: { resto: Restaurant; index: number }) 
         cursor: "pointer",
         textDecoration: "none",
         boxShadow: hovered
-          ? "0 24px 60px rgba(0,0,0,0.45), 0 8px 20px rgba(0,0,0,0.3)"
-          : "0 8px 28px rgba(0,0,0,0.25)",
+          ? "0 22px 48px rgba(43,74,58,0.30), 0 6px 16px rgba(43,74,58,0.18)"
+          : "0 6px 20px rgba(43,74,58,0.18)",
         transform: hovered ? "translateY(-8px) scale(1.02)" : "translateY(0) scale(1)",
         transition: "transform 0.32s cubic-bezier(0.34,1.3,0.64,1), box-shadow 0.32s ease",
       }}
@@ -94,26 +206,26 @@ function RestaurantCard({ resto, index }: { resto: Restaurant; index: number }) 
         position: "absolute",
         inset: 0,
         backgroundImage: resto.cover_url ? `url(${resto.cover_url})` : undefined,
-        background: !resto.cover_url ? `linear-gradient(145deg, ${resto.color_bg ?? "#1a5c3a"}, ${resto.color_accent ?? "#2E7D32"})` : undefined,
+        background: !resto.cover_url ? `linear-gradient(145deg, ${resto.color_bg ?? C.forest}, ${resto.color_accent ?? C.green})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         transform: hovered ? "scale(1.08)" : "scale(1)",
         transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
       }} />
 
-      {/* Overlay dégradé bas */}
+      {/* Overlay dégradé bas (garde le texte blanc lisible) */}
       <div style={{
         position: "absolute",
         inset: 0,
-        background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)",
+        background: "linear-gradient(to top, rgba(20,34,27,0.88) 0%, rgba(20,34,27,0.25) 55%, transparent 100%)",
         zIndex: 1,
       }} />
 
       {/* Pattern déco */}
-      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 1, opacity: 0.06, pointerEvents: "none" }} aria-hidden>
+      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 1, opacity: 0.07, pointerEvents: "none" }} aria-hidden="true">
         <defs>
           <pattern id={`pat-${resto.id}`} x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
-            <circle cx="14" cy="14" r="1.5" fill="#fff" />
+            <rect x="12" y="12" width="4" height="4" rx="1" fill="#fff" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill={`url(#pat-${resto.id})`} />
@@ -132,9 +244,9 @@ function RestaurantCard({ resto, index }: { resto: Restaurant; index: number }) 
           height: 88,
           borderRadius: "50%",
           overflow: "hidden",
-          border: "3px solid rgba(255,255,255,0.9)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.35), 0 0 0 2px rgba(255,255,255,0.15)",
-          background: "#fff",
+          border: `3px solid ${C.ivory}`,
+          boxShadow: "0 8px 28px rgba(0,0,0,0.30)",
+          background: C.white,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -151,10 +263,10 @@ function RestaurantCard({ resto, index }: { resto: Restaurant; index: number }) 
       {/* Infos bas */}
       <div style={{ position: "relative", zIndex: 2, padding: "0 14px 16px", width: "100%", textAlign: "center" }}>
         <p style={{
-          fontSize: 14,
-          fontWeight: 800,
+          fontFamily: FONT_TITLE,
+          fontSize: 16,
+          fontWeight: 600,
           color: "#fff",
-          letterSpacing: "-0.01em",
           lineHeight: 1.2,
           margin: "0 0 4px",
           textShadow: "0 2px 8px rgba(0,0,0,0.4)",
@@ -163,45 +275,45 @@ function RestaurantCard({ resto, index }: { resto: Restaurant; index: number }) 
         </p>
         {resto.tagline && (
           <p style={{
-            fontSize: 10,
-            color: "rgba(255,255,255,0.72)",
+            fontFamily: FONT_BODY,
+            fontSize: 11,
+            color: "rgba(255,255,255,0.86)",
             lineHeight: 1.4,
             margin: 0,
             overflow: "hidden",
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
-          } as React.CSSProperties}>
+          } as CSSProperties}>
             {resto.tagline}
           </p>
         )}
         {resto.address && (
-          <p style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", marginTop: 5, display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}>
-            <MapPin size={8} /> {resto.address}
+          <p style={{ fontFamily: FONT_BODY, fontSize: 11, color: "rgba(255,255,255,0.75)", margin: "5px 0 0", display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}>
+            <MapPin size={10} aria-hidden="true" /> {resto.address}
           </p>
         )}
 
         {/* Bouton voir */}
         <motion.div
-          animate={{ opacity: hovered ? 1 : 0, y: hovered ? 0 : 6 }}
+          animate={{ opacity: hovered ? 1 : 0.88, y: hovered ? 0 : 2 }}
           transition={{ duration: 0.22 }}
           style={{
-            marginTop: 8,
+            marginTop: 10,
             display: "inline-flex",
             alignItems: "center",
             gap: 4,
-            background: "rgba(255,255,255,0.18)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.3)",
+            background: C.terracotta,
             borderRadius: 999,
-            padding: "5px 12px",
-            fontSize: 10,
+            padding: "6px 14px",
+            fontFamily: FONT_BODY,
+            fontSize: 11,
             fontWeight: 700,
-            color: "#fff",
-            letterSpacing: "0.06em",
+            color: C.ivory,
+            letterSpacing: "0.05em",
           }}
         >
-          Voir le menu <ChevronRight size={10} />
+          Voir le menu <ChevronRight size={11} aria-hidden="true" />
         </motion.div>
       </div>
     </motion.a>
@@ -224,44 +336,44 @@ function TypeSection({ typeName, typeSlug, restos }: { typeName: string; typeSlu
       style={{ marginBottom: 48 }}
     >
       {/* Header section */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 24px", marginBottom: 20 }}>
-        <span style={{
-          width: 38,
-          height: 38,
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 24px", marginBottom: 20 }}>
+        <span aria-hidden="true" style={{
+          width: 40,
+          height: 40,
           borderRadius: 12,
-          background: `${meta.color}22`,
-          border: `1.5px solid ${meta.color}44`,
+          background: `${meta.color}1F`,
+          border: `1.5px solid ${meta.color}40`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 18,
+          fontSize: 19,
           flexShrink: 0,
         }}>
           {meta.icon}
         </span>
         <div>
           <h2 style={{
-            fontSize: 16,
-            fontWeight: 800,
-            color: "#F5E6C8",
-            letterSpacing: "-0.02em",
+            fontFamily: FONT_TITLE,
+            fontSize: 20,
+            fontWeight: 600,
+            color: C.forest,
             margin: 0,
-            lineHeight: 1,
+            lineHeight: 1.1,
           }}>
             {typeName}
           </h2>
-          <p style={{ fontSize: 10, color: "rgba(245,230,200,0.45)", margin: "3px 0 0", letterSpacing: "0.08em" }}>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.muted, margin: "3px 0 0" }}>
             {restos.length} établissement{restos.length > 1 ? "s" : ""}
           </p>
         </div>
-        <div style={{ flex: 1, height: 1, background: "rgba(245,230,200,0.08)", marginLeft: 8 }} />
+        <div style={{ flex: 1, height: 1, background: C.line, marginLeft: 8 }} />
       </div>
 
       {/* Scroll horizontal */}
       <div style={{
         display: "flex",
         gap: 16,
-        padding: "8px 24px 16px",
+        padding: "8px 24px 20px",
         overflowX: "auto",
         scrollbarWidth: "none",
         WebkitOverflowScrolling: "touch",
@@ -363,24 +475,23 @@ export default function HomePage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#0a2e20",
-      fontFamily: "sans-serif",
+      background: C.cream,
+      fontFamily: FONT_BODY,
       overflowX: "hidden",
     }}>
-      {/* ── Background déco ── */}
+      {/* ── Background déco : pixels de QR code ── */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        {/* Blob haut-gauche */}
-        <div style={{ position: "absolute", top: "-15%", left: "-15%", width: "55%", height: "55%", background: "radial-gradient(ellipse, rgba(46,125,50,0.25) 0%, transparent 70%)", filter: "blur(80px)" }} />
-        {/* Blob bas-droite */}
-        <div style={{ position: "absolute", bottom: "0%", right: "-10%", width: "50%", height: "50%", background: "radial-gradient(ellipse, rgba(245,197,24,0.06) 0%, transparent 70%)", filter: "blur(90px)" }} />
-        {/* Pattern SVG */}
-        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.04 }} aria-hidden>
+        <div style={{ position: "absolute", top: "-15%", left: "-15%", width: "55%", height: "55%", background: "radial-gradient(ellipse, rgba(110,154,90,0.18) 0%, transparent 70%)", filter: "blur(70px)" }} />
+        <div style={{ position: "absolute", bottom: "0%", right: "-10%", width: "50%", height: "50%", background: "radial-gradient(ellipse, rgba(164,74,38,0.10) 0%, transparent 70%)", filter: "blur(80px)" }} />
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.07 }} aria-hidden="true">
           <defs>
-            <pattern id="home-diamonds" x="0" y="0" width="48" height="48" patternUnits="userSpaceOnUse">
-              <polygon points="24,4 44,24 24,44 4,24" fill="none" stroke="#F5E6C8" strokeWidth="0.8" />
+            <pattern id="home-pixels" x="0" y="0" width="56" height="56" patternUnits="userSpaceOnUse">
+              <rect x="10" y="10" width="8" height="8" rx="2" fill={C.green} />
+              <rect x="34" y="22" width="6" height="6" rx="1.5" fill={C.terracotta} />
+              <rect x="22" y="40" width="5" height="5" rx="1.5" fill={C.sage} />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#home-diamonds)" />
+          <rect width="100%" height="100%" fill="url(#home-pixels)" />
         </svg>
       </div>
 
@@ -398,21 +509,9 @@ export default function HomePage() {
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 20 }}
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 20,
-              background: "linear-gradient(135deg, #2E7D32, #1B5E20)",
-              border: "1.5px solid rgba(245,197,24,0.35)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 20px",
-              boxShadow: "0 12px 40px rgba(46,125,50,0.4)",
-              fontSize: 28,
-            }}
+            style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}
           >
-            <img src="/logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+            <MenuQrMark size={84} />
           </motion.div>
 
           <motion.h1
@@ -420,15 +519,15 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.18, duration: 0.5 }}
             style={{
-              fontSize: "clamp(32px, 9vw, 56px)",
-              fontWeight: 900,
-              color: "#F5E6C8",
-              letterSpacing: "-0.035em",
+              fontFamily: FONT_TITLE,
+              fontSize: "clamp(36px, 9vw, 60px)",
+              fontWeight: 600,
+              color: C.forest,
               lineHeight: 1,
-              margin: "0 0 10px",
+              margin: "0 0 12px",
             }}
           >
-            Menu<span style={{ color: "#F5C518" }}>QR</span>
+            Menu<span style={{ color: C.terracotta }}>Qr</span>
           </motion.h1>
 
           <motion.p
@@ -437,8 +536,9 @@ export default function HomePage() {
             transition={{ delay: 0.28 }}
             style={{
               fontSize: 13,
-              color: "rgba(245,230,200,0.55)",
-              letterSpacing: "0.18em",
+              fontWeight: 500,
+              color: C.muted,
+              letterSpacing: "0.16em",
               textTransform: "uppercase",
               margin: "0 0 36px",
             }}
@@ -446,20 +546,20 @@ export default function HomePage() {
             Découvrez les menus près de chez vous
           </motion.p>
 
-          {/* ── Barre de recherche ── */}
           {/* ── Barre de recherche avec autocomplétion ── */}
           <motion.div style={{ position: "relative", maxWidth: 480, margin: "0 auto" }}>
             <div style={{
               display: "flex", alignItems: "center",
-              background: "rgba(255,255,255,0.07)",
-              backdropFilter: "blur(20px)",
-              border: `1.5px solid ${search ? "rgba(245,197,24,0.5)" : "rgba(255,255,255,0.12)"}`,
+              background: C.white,
+              border: `1.5px solid ${search ? C.terracotta : C.line}`,
+              boxShadow: "0 6px 22px rgba(43,74,58,0.10)",
               borderRadius: 16, padding: "0 16px",
               transition: "border-color 0.25s",
             }}>
-              <Search size={16} color="rgba(245,230,200,0.5)" style={{ flexShrink: 0 }} />
+              <Search size={16} color={C.muted} style={{ flexShrink: 0 }} aria-hidden="true" />
               <input
                 type="text"
+                aria-label="Rechercher un restaurant"
                 value={search}
                 onChange={e => {
                   const val = e.target.value;
@@ -480,15 +580,16 @@ export default function HomePage() {
                 placeholder="Rechercher un restaurant…"
                 style={{
                   flex: 1, background: "transparent", border: "none", outline: "none",
-                  padding: "14px 12px", fontSize: 14, color: "#F5E6C8", fontFamily: "sans-serif",
+                  padding: "14px 12px", fontSize: 15, color: C.forest, fontFamily: FONT_BODY,
                 }}
               />
               <AnimatePresence>
                 {search && (
                   <motion.button
+                    aria-label="Effacer la recherche"
                     initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.7 }}
                     onClick={() => { setSearch(""); setShowSuggestions(false); }}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(245,230,200,0.5)", fontSize: 18, lineHeight: 1, padding: 4 }}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, fontSize: 20, lineHeight: 1, padding: 6 }}
                   >×</motion.button>
                 )}
               </AnimatePresence>
@@ -501,8 +602,9 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                   style={{
                     position: "absolute", top: "calc(100% + 8px)", left: 0, right: 0,
-                    background: "#0f3d28", border: "1px solid rgba(245,197,24,0.2)",
-                    borderRadius: 12, overflow: "hidden", zIndex: 50,
+                    background: C.white, border: `1px solid ${C.line}`,
+                    boxShadow: "0 14px 36px rgba(43,74,58,0.16)",
+                    borderRadius: 14, overflow: "hidden", zIndex: 50, textAlign: "left",
                   }}
                 >
                   {suggestions.map(r => {
@@ -514,16 +616,16 @@ export default function HomePage() {
                         href={`/${r.slug}`}
                         style={{
                           display: "flex", alignItems: "center", gap: 10,
-                          padding: "10px 16px", textDecoration: "none",
-                          borderBottom: "1px solid rgba(255,255,255,0.05)",
+                          padding: "11px 16px", textDecoration: "none",
+                          borderBottom: `1px solid ${C.line}`,
                         }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(245,197,24,0.08)")}
+                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(164,74,38,0.08)")}
                         onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                       >
-                        <span style={{ fontSize: 16 }}>{meta.icon}</span>
-                        <span style={{ fontSize: 13, color: "#F5E6C8", fontWeight: 600 }}>{r.name}</span>
+                        <span style={{ fontSize: 16 }} aria-hidden="true">{meta.icon}</span>
+                        <span style={{ fontSize: 14, color: C.forest, fontWeight: 600 }}>{r.name}</span>
                         {firstType && (
-                          <span style={{ fontSize: 11, color: "rgba(245,230,200,0.45)", marginLeft: "auto" }}>
+                          <span style={{ fontSize: 12, color: C.muted, marginLeft: "auto" }}>
                             {firstType.name}
                           </span>
                         )}
@@ -534,14 +636,15 @@ export default function HomePage() {
               )}
             </AnimatePresence>
           </motion.div>
+
           {/* ── Filtres par type ── */}
           {!search && (
             <motion.div
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.38 }}
-              style={{ marginTop: 20 }}
+              style={{ marginTop: 22 }}
             >
-              <p style={{ fontSize: 9, color: "rgba(245,230,200,0.3)", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 10 }}>
+              <p style={{ fontSize: 11, color: C.muted, letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 12px" }}>
                 Filtrer par type
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
@@ -551,29 +654,31 @@ export default function HomePage() {
                   return (
                     <button
                       key={type.id}
+                      aria-pressed={active}
                       onClick={() => {
                         setActiveTypes(prev => {
                           const next = new Set(prev);
-                          active ? next.delete(type.id) : next.add(type.id);
+                          if (active) next.delete(type.id); else next.add(type.id);
                           return next;
                         });
                       }}
                       style={{
                         display: "flex", alignItems: "center", gap: 6,
-                        background: active ? `${meta.color}26` : "rgba(255,255,255,0.05)",
-                        border: `${active ? "1.5px" : "1px"} solid ${active ? meta.color + "80" : "rgba(255,255,255,0.1)"}`,
-                        borderRadius: 999, padding: "6px 14px", cursor: "pointer",
+                        background: active ? C.terracotta : C.ivory,
+                        border: `1.5px solid ${active ? C.terracotta : C.line}`,
+                        borderRadius: 999, padding: "7px 14px", cursor: "pointer",
                         transition: "all 0.2s",
+                        fontFamily: FONT_BODY,
                       }}
                     >
-                      <span style={{ fontSize: 14 }}>{meta.icon}</span>
-                      <span style={{ fontSize: 12, color: active ? "#F5C518" : "rgba(245,230,200,0.7)", fontWeight: active ? 700 : 400 }}>
+                      <span style={{ fontSize: 14 }} aria-hidden="true">{meta.icon}</span>
+                      <span style={{ fontSize: 13, color: active ? C.ivory : C.forest, fontWeight: active ? 700 : 500 }}>
                         {type.name}
                       </span>
                       <span style={{
-                        fontSize: 10, borderRadius: 999, padding: "1px 6px",
-                        background: active ? "rgba(245,197,24,0.25)" : "rgba(255,255,255,0.08)",
-                        color: active ? "#F5C518" : "rgba(245,230,200,0.5)",
+                        fontSize: 11, borderRadius: 999, padding: "1px 7px", fontWeight: 600,
+                        background: active ? "rgba(251,245,233,0.25)" : "rgba(43,74,58,0.08)",
+                        color: active ? C.ivory : C.muted,
                       }}>
                         {restos.length}
                       </span>
@@ -591,7 +696,7 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                style={{ fontSize: 11, color: "rgba(245,230,200,0.45)", marginTop: 10, letterSpacing: "0.06em" }}
+                style={{ fontSize: 13, color: C.muted, marginTop: 12 }}
               >
                 {filtered.length} résultat{filtered.length !== 1 ? "s" : ""} pour « {search} »
               </motion.p>
@@ -601,18 +706,18 @@ export default function HomePage() {
 
         {/* ── Séparateur ── */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 24px", marginBottom: 36 }}>
-          <div style={{ flex: 1, height: 1, background: "rgba(245,230,200,0.08)" }} />
-          <span style={{ fontSize: 9, letterSpacing: "0.25em", color: "rgba(245,230,200,0.3)", textTransform: "uppercase" }}>
+          <div style={{ flex: 1, height: 1, background: C.line }} />
+          <span style={{ fontSize: 11, letterSpacing: "0.22em", color: C.muted, textTransform: "uppercase" }}>
             Établissements
           </span>
-          <div style={{ flex: 1, height: 1, background: "rgba(245,230,200,0.08)" }} />
+          <div style={{ flex: 1, height: 1, background: C.line }} />
         </div>
 
         {/* ── Contenu ── */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: "60px 24px" }}>
-            <div style={{ width: 40, height: 40, borderRadius: "50%", border: "2px solid rgba(245,230,200,0.15)", borderTopColor: "#F5C518", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
-            <p style={{ color: "rgba(245,230,200,0.4)", fontSize: 11, letterSpacing: "0.2em" }}>CHARGEMENT…</p>
+          <div role="status" aria-live="polite" style={{ textAlign: "center", padding: "60px 24px" }}>
+            <QrPixelsLoader />
+            <p style={{ color: C.muted, fontSize: 12, letterSpacing: "0.2em", margin: 0 }}>CHARGEMENT…</p>
           </div>
         ) : filtered.length === 0 ? (
           <motion.div
@@ -620,8 +725,8 @@ export default function HomePage() {
             animate={{ opacity: 1 }}
             style={{ textAlign: "center", padding: "60px 24px" }}
           >
-            <p style={{ fontSize: 40, marginBottom: 12 }}>🔍</p>
-            <p style={{ color: "rgba(245,230,200,0.5)", fontSize: 14 }}>
+            <p style={{ fontSize: 40, margin: "0 0 12px" }} aria-hidden="true">🔍</p>
+            <p style={{ color: C.muted, fontSize: 15, margin: 0 }}>
               Aucun restaurant pour « {search} »
             </p>
           </motion.div>
@@ -646,16 +751,24 @@ export default function HomePage() {
         )}
 
         {/* ── Footer ── */}
-        <footer style={{ textAlign: "center", padding: "32px 24px", borderTop: "1px solid rgba(245,230,200,0.06)" }}>
-          <p style={{ fontSize: 9, color: "rgba(245,230,200,0.25)", letterSpacing: "0.2em", textTransform: "uppercase" }}>
-            MenuQR · Menus numériques
+        <footer style={{ textAlign: "center", padding: "32px 24px", borderTop: `1px solid ${C.line}` }}>
+          <p style={{ fontSize: 11, color: C.muted, letterSpacing: "0.18em", textTransform: "uppercase", margin: 0 }}>
+            MenuQr · Menus numériques
           </p>
         </footer>
       </div>
 
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        input::placeholder { color: rgba(245,230,200,0.3); }
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=DM+Sans:wght@400;500;700&display=swap');
+        @keyframes mqr-pixel {
+          0%, 100% { opacity: 0.12; transform: scale(0.75); }
+          40%      { opacity: 1;    transform: scale(1); }
+        }
+        .mqr-pixel { animation: mqr-pixel 1.6s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .mqr-pixel { animation: none; opacity: 0.6; }
+        }
+        input::placeholder { color: #7A6A5A; }
         ::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
