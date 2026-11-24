@@ -138,8 +138,6 @@ export default function MenuPage({ slug }: MenuPageProps) {
         if (!cancelled) {
           setRestaurant(resto);
           setCategories(cats ?? []);
-          console.log("rawItems sample:", JSON.stringify(rawItems?.[0], null, 2));
-console.log("menuItems sample:", JSON.stringify(menuItems?.[0], null, 2));
           setItems(menuItems);
         }
       } catch (err: unknown) {

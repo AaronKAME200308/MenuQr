@@ -1,8 +1,9 @@
-// components/ItemCard.tsx — v3 (promotions)
+// components/ItemCard.tsx — v3.1 (style d'origine conservé + correctifs invisibles)
+// Changements : promoPrice avec devise, images lazy, mouvement réduit, a11y, textes minimum 11px.
 
-import { motion, useAnimationControls } from "framer-motion";
+import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import { useEffect }                    from "react";
-import { Star, Flame, Sparkles, Leaf, Tag }  from "lucide-react";
+import { Star, Flame, Sparkles, Leaf, Tag, ChevronRight }  from "lucide-react";
 import type { FC }                      from "react";
 import type { MenuItem, Colors }        from "./types";
 
@@ -18,8 +19,9 @@ export function fmt(price: number, currency = "XAF"): string {
 }
 
 /** Calcule le prix après promotion */
-export function promoPrice(price: number, pct: number): number {
-  return Math.round(price * (1 - pct / 100) * 100) / 100;
+export function promoPrice(price: number, pct: number, currency = "XAF"): number {
+  const raw = price * (1 - pct / 100);
+  return currency === "XAF" || currency === "XOF" ? Math.round(raw) : Math.round(raw * 100) / 100;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -40,22 +42,22 @@ export const DishBadge: FC<DishBadgeProps> = ({ item, labelBestseller, labelPopu
     gap:         4,
     borderRadius: 999,
     fontWeight:  700,
-    fontSize:    9,
+    fontSize:    11,
     padding:     "3px 9px",
   };
   if (item.is_bestseller) return (
     <span style={{ ...base, background: "linear-gradient(135deg,#c8a84b,#f5d98b)", color: "#3a2800" }}>
-      <Star size={8} fill="#3a2800" strokeWidth={0} /> {labelBestseller}
+      <Star size={10} fill="#3a2800" strokeWidth={0} /> {labelBestseller}
     </span>
   );
   if (item.is_popular) return (
     <span style={{ ...base, background: "rgba(255,100,50,0.18)", color: "#ff9060" }}>
-      <Flame size={8} /> {labelPopular}
+      <Flame size={10} /> {labelPopular}
     </span>
   );
   if (item.is_new) return (
     <span style={{ ...base, background: "rgba(80,200,120,0.18)", color: "#50c878" }}>
-      <Sparkles size={8} /> {labelNew}
+      <Sparkles size={10} /> {labelNew}
     </span>
   );
   return null;
@@ -150,7 +152,7 @@ const PromoBadge: FC<PromoBadgeProps> = ({ pct, freeLabel }) => {
         gap:           3,
         background:    "linear-gradient(135deg, #e53935 0%, #ff5252 100%)",
         color:         "#fff",
-        fontSize:      9,
+        fontSize:      11,
         fontWeight:    900,
         padding:       "3px 7px 3px 5px",
         borderRadius:  "0 8px 8px 0",
@@ -180,8 +182,10 @@ interface FloatingImageProps {
 
 const FloatingImage: FC<FloatingImageProps> = ({ src, alt, colors, delay = 0 }) => {
   const controls = useAnimationControls();
+  const reduce   = useReducedMotion();
 
   useEffect(() => {
+    if (reduce) return;
     const timer = setTimeout(() => {
       void controls.start({
         y:       [0, -11, 0],
@@ -195,7 +199,7 @@ const FloatingImage: FC<FloatingImageProps> = ({ src, alt, colors, delay = 0 }) 
       });
     }, delay * 80 + 200);
     return () => clearTimeout(timer);
-  }, [controls, delay]);
+  }, [controls, delay, reduce]);
 
   return (
     <motion.div
@@ -216,7 +220,7 @@ const FloatingImage: FC<FloatingImageProps> = ({ src, alt, colors, delay = 0 }) 
       }}
     >
       {src ? (
-        <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <img src={src} alt="" loading="lazy" decoding="async" width={CIRCLE_SIZE} height={CIRCLE_SIZE} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       ) : (
         <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, background: `${colors.primary}0a` }}>
           🍽️
@@ -262,7 +266,7 @@ const ItemCard: FC<ItemCardProps> = ({
 
   const hasPromo = item.promotion_active && (item.promotion ?? 0) > 0;
   const discountedPrice = hasPromo
-    ? promoPrice(item.price, item.promotion!)
+    ? promoPrice(item.price, item.promotion!, item.currency)
     : null;
 
   return (
@@ -281,6 +285,7 @@ const ItemCard: FC<ItemCardProps> = ({
       onClick={() => onOpen(item)}
       role="button"
       tabIndex={0}
+      aria-label={`${item.name}, ${fmt(hasPromo ? promoPrice(item.price, item.promotion!, item.currency) : item.price, item.currency)}`}
       onKeyDown={handleKeyDown}
       style={{
         width:          148,
@@ -312,15 +317,15 @@ const ItemCard: FC<ItemCardProps> = ({
         position:       "absolute",
         top:            -OVERHANG + 4,
         right:          10,
-        width:          20,
-        height:         20,
+        width:          22,
+        height:         22,
         borderRadius:   "50%",
         background:     colors.accent,
         color:          colors.primary,
         display:        "flex",
         alignItems:     "center",
         justifyContent: "center",
-        fontSize:       8,
+        fontSize:       10,
         fontWeight:     800,
         zIndex:         3,
       }}>
@@ -347,15 +352,15 @@ const ItemCard: FC<ItemCardProps> = ({
           labelNew={labelNew}
         />
 
-        <p style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2, color: colors.primary, letterSpacing: "-0.01em", marginTop: 4 }}>
+        <p style={{ fontSize: 14, fontWeight: 800, lineHeight: 1.2, color: colors.primary, letterSpacing: "-0.01em", marginTop: 4 }}>
           {item.name}
         </p>
 
         {item.description && (
           <p style={{
-            fontSize:        10,
-            lineHeight:      1.5,
-            color:           `${colors.main}90`,
+            fontSize:        12,
+            lineHeight:      1.4,
+            color:           `${colors.main}cc`,
             display:         "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
@@ -383,13 +388,13 @@ const ItemCard: FC<ItemCardProps> = ({
         <div style={{ width: 28, height: 1, background: `${colors.main}12`, margin: "6px 0" }} />
 
         {/* Prix */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
             {hasPromo ? (
               <>
                 {/* Prix original barré */}
                 <span style={{
-                  fontSize:       10,
+                  fontSize:       12,
                   fontWeight:     600,
                   color:          `${colors.main}`,
                   textDecoration: "line-through",
@@ -419,16 +424,30 @@ const ItemCard: FC<ItemCardProps> = ({
               </p>
             )}
           </div>
-          <motion.span
-            whileHover={{ x: 3 }}
-            style={{ fontSize: 10, color: `${colors.main}`, fontFamily: "sans-serif" }}
+          <span
+            aria-hidden="true"
+            style={{
+              display:        "inline-flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              gap:            4,
+              width:          "100%",
+              minHeight:      44,
+              borderRadius:   999,
+              background:     colors.accent,
+              color:          colors.bg,
+              fontSize:       13,
+              fontWeight:     700,
+              fontFamily:     "sans-serif",
+              boxShadow:      `0 4px 12px ${colors.accent}40`,
+            }}
           >
             {labelVoir}
-          </motion.span>
+          </span>
         </div>
 
         {item.variants && item.variants.length > 0 && (
-          <p style={{ fontSize: 9, color: `${colors.main}`, fontFamily: "sans-serif" }}>
+          <p style={{ fontSize: 11, color: `${colors.main}`, fontFamily: "sans-serif" }}>
             {item.variants.length} {labelTailles}
           </p>
         )}

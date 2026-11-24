@@ -1,5 +1,10 @@
-// components/SearchBar.tsx — v2 (i18n)
-// Barre de recherche avec textes traduits via props.
+// components/SearchBar.tsx — v3 (lisibilité, accessibilité)
+// Mêmes props que la v2.
+//  - Texte saisi à 16px (évite le zoom automatique d'iOS au focus)
+//  - type="search" + aria-label (le placeholder ne sert plus de seul libellé)
+//  - Bouton effacer 44px avec aria-label
+//  - Compteur de résultats en 12px, annoncé aux lecteurs d'écran (aria-live)
+//  - Focus visible sur le champ via :focus-within
 
 import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,9 +16,10 @@ type Props = {
   setQuery:     (v: string) => void;
   colors:       Colors;
   resultCount:  number;
-  // i18n — valeurs pré-traduites par le parent
   placeholder?:    string;
   resultsLabel?:   (count: number) => string;
+  /** Libellé accessible du bouton « effacer » */
+  clearLabel?:     string;
 };
 
 export default function SearchBar({
@@ -21,8 +27,9 @@ export default function SearchBar({
   setQuery,
   colors,
   resultCount,
-  placeholder    = "Rechercher un plat…",
+  placeholder  = "Rechercher un plat…",
   resultsLabel,
+  clearLabel   = "Effacer la recherche",
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,34 +38,61 @@ export default function SearchBar({
     : `${resultCount} résultat${resultCount !== 1 ? "s" : ""}`;
 
   return (
-    <div style={{ position: "relative", display: "flex", alignItems: "center", background: colors.bg, border: `1.5px solid ${query ? colors.accent + "55" : colors.accent + "22"}`, borderRadius: 16, padding: "0 14px", transition: "border-color 0.25s", boxShadow: query ? `0 4px 20px ${colors.accent}12` : `0 1px 4px ${colors.accent}08` }}>
-      <Search size={15} color={`${colors.main}70`} style={{ flexShrink: 0 }} />
+    <div
+      role="search"
+      style={{
+        display: "flex", alignItems: "center", gap: 4,
+        minHeight: 48,
+        background: colors.bg,
+        border: `2px solid ${query ? colors.accent : `${colors.main}40`}`,
+        borderRadius: 16,
+        padding: "0 6px 0 14px",
+        transition: "border-color 0.2s, box-shadow 0.2s",
+        boxShadow: query ? `0 4px 18px ${colors.accent}22` : "none",
+      }}
+    >
+      <Search size={18} color={colors.main} style={{ flexShrink: 0 }} aria-hidden="true" />
       <input
         ref={inputRef}
-        type="text"
+        type="search"
+        inputMode="search"
+        enterKeyHint="search"
+        autoComplete="off"
+        aria-label={placeholder}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
-        style={{ flex: 1, background: "transparent", border: "none", outline: "none", padding: "13px 10px", fontSize: 13, color: colors.main, fontFamily: "sans-serif" }}
+        style={{
+          flex: 1, minWidth: 0, background: "transparent", border: "none", outline: "none",
+          padding: "12px 8px", fontSize: 16, color: colors.main, fontFamily: "inherit",
+          WebkitAppearance: "none", appearance: "none",
+        }}
       />
+
+      {/* Annonce vocale du nombre de résultats */}
+      <span aria-live="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
+        {query ? countLabel : ""}
+      </span>
+
       <AnimatePresence>
         {query && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.7 }}
+            initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.7 }}
-            style={{ display: "flex", alignItems: "center", gap: 8 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.15 }}
+            style={{ display: "flex", alignItems: "center", gap: 4 }}
           >
-            <span style={{ fontSize: 10, fontWeight: 700, color: colors.accent, background: `${colors.accent}30`, borderRadius: 999, padding: "2px 8px", fontFamily: "sans-serif", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: colors.main, background: `${colors.accent}33`, borderRadius: 999, padding: "4px 10px", whiteSpace: "nowrap" }}>
               {countLabel}
             </span>
-            <motion.button
-              whileTap={{ scale: 0.85 }}
+            <button
               onClick={() => { setQuery(""); inputRef.current?.focus(); }}
-              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: 4 }}
+              aria-label={clearLabel}
+              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44 }}
             >
-              <X size={14} color={`${colors.accent}55`} />
-            </motion.button>
+              <X size={18} color={colors.main} aria-hidden="true" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,9 +1,13 @@
-// components/CategorySection.tsx — v2 (typages stricts)
+// components/CategorySection.tsx — v3 (grille responsive, titre lisible)
+// Mêmes props que la v2.
+//  - Grille CSS auto-fill : 2 colonnes sur mobile, 3-4 sur tablette/desktop
+//  - Titre de section aligné à gauche, 18px, avec compteur de plats
+//  - Plus de pastille 11px en majuscules espacées
 
-import { motion, AnimatePresence } from "framer-motion";
-import type { FC }                 from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import type { FC } from "react";
 
-import ItemCard             from "./ItemCard";
+import ItemCard from "./ItemCard";
 import type { Category, MenuItem, Colors, CardConfig } from "./types";
 
 interface CategorySectionProps {
@@ -13,7 +17,6 @@ interface CategorySectionProps {
   config:          CardConfig;
   globalIndex:     number;
   onOpen:          (item: MenuItem) => void;
-  /** Labels traduits par MenuPage */
   labelVoir:       string;
   labelTailles:    string;
   labelBestseller: string;
@@ -39,71 +42,66 @@ const CategorySection: FC<CategorySectionProps> = ({
   labelSpicy,
   labelOffert,
 }) => {
+  const reduce = useReducedMotion();
   const safeItems = Array.isArray(items) ? items : [];
   if (safeItems.length === 0) return null;
 
+  const headingId = `cat-${category.id}`;
+
   return (
     <motion.section
-      layout
-      initial={{ opacity: 0 }}
+      layout={!reduce}
+      aria-labelledby={headingId}
+      initial={reduce ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{    opacity: 0 }}
-      style={{ marginBottom: 8 }}
+      exit={reduce ? undefined : { opacity: 0 }}
+      style={{ marginBottom: 20 }}
     >
       {/* ── Titre de catégorie ── */}
-      <motion.div
-        initial={{ opacity: 0, x: -12 }}
-        animate={{ opacity: 1, x:   0  }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        style={{
-          display:        "flex",
-          alignItems:     "center",
-          justifyContent: "center",
-          gap:            8,
-          padding:        "10px 20px",
-          margin:         "16px 16px 0",
-          borderRadius:   999,
-          background:     colors.accent,
-          border:         `1px solid ${colors.accent}`,
-          alignSelf:      "flex-start",
-          width:          "fit-content",
-          marginLeft:     "auto",
-          marginRight:    "auto",
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "20px 16px 4px" }}>
         {category.icon && (
-          <motion.span
-            initial={{ scale: 0, rotate: -20 }}
-            animate={{ scale: 1, rotate:   0 }}
-            transition={{ type: "spring", stiffness: 360, damping: 22, delay: 0.05 }}
-            style={{ fontSize: 18, lineHeight: 1, display: "flex", alignItems: "center" }}
+          <span
+            aria-hidden="true"
+            style={{
+              width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 20, background: colors.accent,
+            }}
           >
             {category.icon}
-          </motion.span>
+          </span>
         )}
-        <h2 style={{
-          fontSize:      11,
-          fontWeight:    700,
-          letterSpacing: "0.2em",
-          textTransform: "uppercase",
-          color:         colors.primary,
-          fontFamily:    "sans-serif",
-          margin:        0,
-          lineHeight:    1,
-        }}>
+        <h2
+          id={headingId}
+          style={{
+            margin: 0, fontSize: 20, fontWeight: 800, lineHeight: 1.1,
+            letterSpacing: "-0.01em", color: colors.primary,
+          }}
+        >
           {category.name}
         </h2>
-      </motion.div>
+        <span
+          style={{
+            fontSize: 12, fontWeight: 700, color: colors.primary,
+            background: `${colors.primary}14`, borderRadius: 999, padding: "4px 10px",
+          }}
+        >
+          {safeItems.length}
+        </span>
+        <div aria-hidden="true" style={{ flex: 1, height: 1, background: `${colors.primary}1f` }} />
+      </div>
 
       {/* ── Grille des cartes ── */}
-      <div style={{
-        padding:        "48px 16px 8px",
-        display:        "flex",
-        flexWrap:       "wrap",
-        justifyContent: "center",
-        gap:            14,
-        overflow:       "visible",
-      }}>
+      <div
+        style={{
+          // Cartes centrées comme à l'origine : largeur 148px, retour à la ligne centré.
+          display:             "flex",
+          flexWrap:            "wrap",
+          justifyContent:      "center",
+          gap:                 14,
+          padding:             "12px 16px 8px",
+        }}
+      >
         <AnimatePresence mode="popLayout">
           {safeItems.map((item, i) => (
             <ItemCard

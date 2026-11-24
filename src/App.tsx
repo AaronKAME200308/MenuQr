@@ -5,6 +5,7 @@ import type { FC } from "react";
 import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
 import MenuPage from "./components/MenuPage";
 import HomePage from "./components/HomePage";
+import Hompage2 from "./components/HomePage2";
 
 const MenuPageWrapper: FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -36,6 +37,7 @@ const App: FC = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/"      element={<HomePage />} />
+      <Route path="/v2"    element={<Hompage2 />} />
       <Route path="/:slug" element={<MenuPageWrapper />} />
       <Route path="*"      element={<NotFound />} />
     </Routes>

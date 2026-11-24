@@ -143,17 +143,17 @@ const FunSocials: FC<FunSocialsProps> = ({
     >
       {/* ── Séparateur + label traduit ── */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-        <div style={{ flex: 1, height: 1, background: `${colors.primary}15` }} />
+        <div style={{ flex: 1, height: 1, background: `${colors.primary}26` }} />
         <p style={{
-          fontSize: 10, letterSpacing: "0.25em",
-          color: `${colors.primary}40`,
+          fontSize: 12, letterSpacing: "0.16em",
+          color: colors.primary, opacity: 0.8,
           fontFamily: "sans-serif",
           textTransform: "uppercase",
           flexShrink: 0,
         }}>
           {sectionLabel}
         </p>
-        <div style={{ flex: 1, height: 1, background: `${colors.primary}15` }} />
+        <div style={{ flex: 1, height: 1, background: `${colors.primary}26` }} />
       </div>
 
       {/* ── Grille / rangée de boutons ── */}
@@ -162,8 +162,9 @@ const FunSocials: FC<FunSocialsProps> = ({
           <motion.a
             key={key}
             href={href}
-            target="_blank"
-            rel="noreferrer"
+            target={key === "phone" || key === "mail" ? undefined : "_blank"}
+            rel={key === "phone" || key === "mail" ? undefined : "noopener noreferrer"}
+            aria-label={label}
             initial={{ opacity: 0, y: 16, scale: 0.9 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
@@ -176,7 +177,7 @@ const FunSocials: FC<FunSocialsProps> = ({
               flexDirection: "column",
               alignItems: "center",
               gap: 10,
-              padding: "18px 12px 16px",
+              padding: "18px 12px 16px", minHeight: 44,
               borderRadius: 20,
               background: `${bg}18`,
               border: `1.5px solid ${bg}30`,
@@ -203,18 +204,18 @@ const FunSocials: FC<FunSocialsProps> = ({
             </motion.div>
 
             <div style={{ textAlign: "center" }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: colors.primary, marginBottom: 2 }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: colors.primary, marginBottom: 2 }}>
               {label}
               </p>
               {key !== "phone" && (
                 <p style={{
-                  fontSize: 9,
-                  color: `${colors.primary}38`,
+                  fontSize: 12,
+                  color: colors.primary, opacity: 0.75,
                   fontFamily: "sans-serif",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
-                  maxWidth: 120,
+                  maxWidth: 130,
                 }}>
                   {href.replace(/^https?:\/\//, "").split("/")[0]}
                 </p>
