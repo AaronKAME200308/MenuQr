@@ -2,14 +2,8 @@
 // Joint menu_item_categories pour peupler category_ids[]
 
 import { useEffect, useState } from "react";
-import { createClient }        from "@supabase/supabase-js";
+import { supabase } from "../lib/supabase";
 import type { Restaurant, Category, MenuItem } from "../components/types";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL      as string,
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string,
-);
-
 interface RawMenuItem extends Omit<MenuItem, "category_ids"> {
   menu_item_categories: { category_id: string }[];
 }

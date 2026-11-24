@@ -6,8 +6,8 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { AnimatePresence, motion }                   from "framer-motion";
-import { createClient }                              from "@supabase/supabase-js";
-import { UtensilsCrossed }                           from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { UtensilsCrossed }from "lucide-react";
 
 import CategorySection         from "./CategorySection";
 import ItemModal               from "./ItemModal";
@@ -26,15 +26,6 @@ import type {
   Colors,
   TextConfig,
 } from "./types";
-
-// ─────────────────────────────────────────────────────────────
-// Supabase client (singleton module-level)
-// ─────────────────────────────────────────────────────────────
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL  as string,
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string,
-);
 
 // ─────────────────────────────────────────────────────────────
 // Type intermédiaire : forme brute retournée par Supabase

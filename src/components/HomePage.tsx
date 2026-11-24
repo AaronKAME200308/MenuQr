@@ -5,13 +5,8 @@
 import { useEffect, useState, useMemo } from "react";
 import type { CSSProperties, JSX } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { createClient } from "@supabase/supabase-js";
 import { Search, MapPin, ArrowUpRight, X, ScanLine, BookOpen, UtensilsCrossed } from "lucide-react";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL as string,
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string,
-);
+import { supabase } from "../lib/supabase";
 
 // ─────────────────────────────────────────────────────────────
 // Palette MenuQr — Marché vivant
