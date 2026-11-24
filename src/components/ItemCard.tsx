@@ -3,7 +3,7 @@
 
 import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import { useEffect }                    from "react";
-import { Star, Flame, Sparkles, Leaf, Tag, ChevronRight }  from "lucide-react";
+import { Star, Flame, Sparkles, Leaf, Tag }  from "lucide-react";
 import type { FC }                      from "react";
 import type { MenuItem, Colors }        from "./types";
 
@@ -180,7 +180,7 @@ interface FloatingImageProps {
   delay?: number;
 }
 
-const FloatingImage: FC<FloatingImageProps> = ({ src, alt, colors, delay = 0 }) => {
+const FloatingImage: FC<FloatingImageProps> = ({ src, colors, delay = 0 }) => {
   const controls = useAnimationControls();
   const reduce   = useReducedMotion();
 

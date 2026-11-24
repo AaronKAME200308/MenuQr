@@ -3,7 +3,7 @@
 // Données Supabase et logique identiques aux versions précédentes.
 
 import { useEffect, useState, useMemo } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, JSX } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
 import { Search, MapPin, ArrowUpRight, X, ScanLine, BookOpen, UtensilsCrossed } from "lucide-react";
